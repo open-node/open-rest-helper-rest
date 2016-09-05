@@ -1,0 +1,37 @@
+{
+  "name": "open-rest-helper-rest",
+  "version": "0.2.0",
+  "description": "open-rest 的 helper 插件，用来实现 CRUD 的标准操作",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm install && ./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/open-node/open-rest-helper-rest.git"
+  },
+  "keywords": [
+    "restapi",
+    "controller",
+    "helper",
+    "assistant",
+    "restify",
+    "open-rest"
+  ],
+  "author": "Redstone Zhao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/open-node/open-rest-helper-rest/issues"
+  },
+  "homepage": "https://github.com/open-node/open-rest-helper-rest#readme",
+  "dependencies": {
+    "func-delegate": "^0.3.0",
+    "lodash": "^4.15.0"
+  },
+  "devDependencies": {
+    "codecov": "^1.0.1",
+    "istanbul": "^0.4.4",
+    "mocha": "^3.0.2",
+    "open-rest": "^6.5.6"
+  }
+}
