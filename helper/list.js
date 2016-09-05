@@ -4,6 +4,7 @@ var delegate  = require('func-delegate')
 
 /**
  * 获取资源列表的通用方法
+ * Model Sequlize 定义的Model，表明数据从哪里获取
  * _options 是否要去req.hooks上去options
  * allowAttrs 那些字段是被允许的
  * hook 默认为空，如果指定了hook，则数据不直接输出而是先挂在 hook上
