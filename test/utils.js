@@ -334,7 +334,8 @@ describe('utils', function() {
         }
       }, where);
 
-      utils.findOptFilter(params, 'address', where);
+      params.parent_like = '*@xiongfei.me';
+      utils.findOptFilter(params, 'parent', where);
       assert.deepEqual({
         personName: {
           $eq: null
@@ -350,6 +351,101 @@ describe('utils', function() {
         },
         address: {
           $not: ['北七家', '天通苑']
+        },
+        parent: {
+          $like: '%@xiongfei.me'
+        }
+      }, where);
+
+      params['parent!'] = 'haha@xiongfei.me';
+      utils.findOptFilter(params, 'parent', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        },
+        gender: {
+          $in: ['male', 'female']
+        },
+        address: {
+          $not: ['北七家', '天通苑']
+        },
+        parent: {
+          $like: '%@xiongfei.me',
+          $ne: 'haha@xiongfei.me'
+        }
+      }, where);
+
+      params.friend_notLike = '%@qq.com';
+      utils.findOptFilter(params, 'friend', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        },
+        gender: {
+          $in: ['male', 'female']
+        },
+        address: {
+          $not: ['北七家', '天通苑']
+        },
+        parent: {
+          $like: '%@xiongfei.me',
+          $ne: 'haha@xiongfei.me'
+        },
+        friend: {
+          $notLike: '%@qq.com'
+        }
+      }, where);
+
+      done();
+    });
+
+    it("params unset", function(done) {
+      assert.equal(undefined, utils.findOptFilter());
+
+      done();
+    });
+
+    it("params no object", function(done) {
+      assert.equal(undefined, utils.findOptFilter('hello world'));
+
+      done();
+    });
+
+    it("$eq where[col] already exists", function(done) {
+      var params = {
+        name: 'zhaoxiongfei',
+        age: 30
+      };
+      var where = {
+        name: {
+          $ne: 'StonePHP'
+        },
+        age: {
+          $gte: 20
+        }
+      };
+      utils.findOptFilter(params, 'name', where);
+      utils.findOptFilter(params, 'age', where);
+      assert.deepEqual({
+        name: {
+          $ne: 'StonePHP',
+          $eq: 'zhaoxiongfei'
+        },
+        age: {
+          $gte: 20,
+          $eq: 30
         }
       }, where);
 
