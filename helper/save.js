@@ -10,7 +10,7 @@ module.exports = function(rest) {
    * Model 必选, Sequlize 定义的Model，表明数据的原型
    * hook 必选, 实例的存放位置
    */
-  var save = (Model, hook) {
+  var save = function(Model, hook) {
 
     return function(req, res, next) {
       var model = req.hooks[hook];
@@ -24,7 +24,7 @@ module.exports = function(rest) {
       model.save().then(function(mod) {
         res.send(mod);
         next();
-      ).catch(function(error) {
+      }).catch(function(error) {
         return next(rest.errors.sequelizeIfError(error));
       });
     };

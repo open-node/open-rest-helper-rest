@@ -97,5 +97,5 @@ module.exports = function(rest) {
     message: 'Added instance will hook on req.hooks[hook], so `hook` must be a string'
   }];
 
-  return delegate(beforeModify, schemas);
+  return delegate(beforeAdd, schemas);
 };
