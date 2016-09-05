@@ -11,8 +11,6 @@ open-rest 的 helper 插件，用来实现 CRUD 的标准操作
 npm instsall open-rest-helper-rest --save
 ```
 
-## rest.omit
-从 req.rest 上去掉一些参数
 ```js
 var rest = require('open-rest');
 var restHelper = require('open-rest-helper-rest')(rest);
