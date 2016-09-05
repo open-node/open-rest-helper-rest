@@ -26,7 +26,8 @@
   "homepage": "https://github.com/open-node/open-rest-helper-rest#readme",
   "dependencies": {
     "func-delegate": "^0.3.0",
-    "lodash": "^4.15.0"
+    "lodash": "^4.15.0",
+    "mysql": "^2.11.1"
   },
   "devDependencies": {
     "codecov": "^1.0.1",
