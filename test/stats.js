@@ -457,7 +457,7 @@ describe('stats', function() {
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
-    return it("asc", function(done) {
+    it("asc", function(done) {
       var expected, params;
       params = {
         dimensions: 'date,network,creator',
@@ -465,6 +465,27 @@ describe('stats', function() {
         sort: 'count'
       };
       expected = "count ASC";
+      assert.equal(stats.sort({}, params), expected);
+      return done();
+    });
+    it("params.dimensions isnt a string", function(done) {
+      var expected, params;
+      params = {
+        dimensions: ['date,network,creator'],
+        metrics: 'count,avg,total',
+        sort: 'count'
+      };
+      expected = "count ASC";
+      assert.equal(stats.sort({}, params), expected);
+      return done();
+    });
+    it("sort dont allowd", function(done) {
+      var expected, params;
+      params = {
+        dimensions: ['date,network,creator'],
+        sort: 'count'
+      };
+      expected = void 0;
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
