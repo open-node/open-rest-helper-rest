@@ -41,7 +41,7 @@ var list = function(Model, opt, allowAttrs, hook) {
           next();
         }).catch(next)
       } else {
-        if (ignoreTotal) res.header("X-Content-Record-Total", 0);
+        res.header("X-Content-Record-Total", 0);
         if (hook) {
           req.hooks[hook] = ls;
         } else {
