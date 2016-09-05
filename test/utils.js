@@ -1,4 +1,6 @@
 var assert      = require('assert')
+  , rest        = require('open-rest')
+  , Sequelize   = rest.Sequelize
   , utils       = require('../lib/utils');
 
 describe('utils', function() {
@@ -195,6 +197,209 @@ describe('utils', function() {
         utils.searchOpt(Model2, '', "a b")
       ]);
       assert.deepEqual(except, real);
+      done();
+    });
+  });
+
+  describe('#findOptFilter', function() {
+    it("The 4th argument col unset", function(done) {
+      var params, where = {};
+      params = {
+        name: 'hello',
+        names: 'zhangsan,lisi,wangwu',
+        'name!': 'zhaoliu',
+        'names!': 'wangqi,houba',
+        address_like: '北京*',
+        address_notLike: '*昌平*',
+        age_gte: 20,
+        age_lte: '30'
+      };
+      utils.findOptFilter(params, 'name', where);
+
+      assert.deepEqual({
+        name: {
+          $eq: 'hello',
+          $in: ['zhangsan', 'lisi', 'wangwu'],
+          $not: ['wangqi', 'houba'],
+          $ne: 'zhaoliu'
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'age', where);
+      assert.deepEqual({
+        name: {
+          $eq: 'hello',
+          $in: ['zhangsan', 'lisi', 'wangwu'],
+          $not: ['wangqi', 'houba'],
+          $ne: 'zhaoliu'
+        },
+        age: {
+          $gte: 20,
+          $lte: '30'
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'address', where);
+      assert.deepEqual({
+        name: {
+          $eq: 'hello',
+          $in: ['zhangsan', 'lisi', 'wangwu'],
+          $not: ['wangqi', 'houba'],
+          $ne: 'zhaoliu'
+        },
+        age: {
+          $gte: 20,
+          $lte: '30'
+        },
+        address: {
+          $like: '北京%',
+          $notLike: '%昌平%'
+        }
+      }, where);
+
+      done();
+    });
+
+    it("col set", function(done) {
+      var params = {
+        name: '.null.',
+        'email!': '.null.',
+        age: 20,
+        genders: 'male,female',
+        'addresss!': '北七家,天通苑'
+      };
+      var where = {};
+      utils.findOptFilter(params, 'name', where, 'personName');
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'email', where, 'personEmail');
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'age', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'gender', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        },
+        gender: {
+          $in: ['male', 'female']
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'address', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        },
+        gender: {
+          $in: ['male', 'female']
+        },
+        address: {
+          $not: ['北七家', '天通苑']
+        }
+      }, where);
+
+      utils.findOptFilter(params, 'address', where);
+      assert.deepEqual({
+        personName: {
+          $eq: null
+        },
+        personEmail: {
+          $ne: null
+        },
+        age: {
+          $eq: 20
+        },
+        gender: {
+          $in: ['male', 'female']
+        },
+        address: {
+          $not: ['北七家', '天通苑']
+        }
+      }, where);
+
+      done();
+    });
+
+  });
+
+  describe('#findOpts', function() {
+    it("normal", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      var params = {
+        showDelete: 'yes'
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      assert.deepEqual({
+        include: undefined,
+        order: undefined,
+        offset: 0,
+        limit: 10
+      }, opts);
+
+      params = {
+        name: 'hi'
+      };
+
+      opts = utils.findAllOpts(Model, params);
+      assert.deepEqual({
+        include: undefined,
+        order: undefined,
+        where: {
+          name: {
+            $eq: 'hi'
+          },
+          isDelete: 'no'
+        },
+        offset: 0,
+        limit: 10
+      }, opts);
+
       done();
     });
   });
