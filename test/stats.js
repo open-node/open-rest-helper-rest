@@ -252,6 +252,46 @@ describe('stats', function() {
     });
   });
   describe('filters', function() {
+    it("动态维度", function(done) {
+      var Model, expected, params, _dims;
+      Model = {
+        rawAttributes: {},
+        stats: {
+          dimensions: {
+            date: '`date2`'
+          }
+        }
+      };
+      params = {filters: 'user==2'};
+      _dims = {
+        user: '`creatorId`'
+      };
+      expected = [
+        {
+          $or: [["`creatorId`=?", ['2']]]
+        }
+      ];
+      assert.deepEqual(expected, stats.filters(Model, params.filters, _dims));
+      return done();
+    });
+    it("isnt a string", function(done) {
+      var Model, expected, params;
+      Model = {
+        rawAttributes: {},
+        stats: {
+          dimensions: {
+            date: '`date2`'
+          }
+        }
+      };
+      params = {filters: []};
+      assert.throws(function() {
+        stats.filters(Model, params.filters);
+      }, function(err) {
+        return err instanceof Error && err.message == 'Filters must be a string';
+      });
+      return done();
+    });
     it("no", function(done) {
       var Model, expected, params;
       Model = {
