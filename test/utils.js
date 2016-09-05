@@ -110,6 +110,90 @@ describe('utils', function() {
       assert.deepEqual(except, real);
       done();
     });
+
+    it("qstr isnt string", function(done) {
+      var Model = {
+        name: 'user',
+        searchCols: {
+          name: {
+            op: 'LIKE',
+            match: ['%{1}%']
+          }
+        }
+      };
+      var real = utils.searchOpt(Model, '', []);
+      assert.equal(undefined, real);
+      done();
+    });
+
+    it("qstr isnt space string", function(done) {
+      var Model = {
+        name: 'user',
+        searchCols: {
+          name: {
+            op: 'LIKE',
+            match: ['%{1}%']
+          }
+        }
+      };
+      var real = utils.searchOpt(Model, '', '\t');
+      assert.equal(undefined, real);
+      done();
+    });
+
+    it("Model.searchCols unset", function(done) {
+      var Model = {
+        name: 'user',
+      };
+      var real = utils.searchOpt(Model, '', 'a');
+      assert.equal(undefined, real);
+      done();
+    });
+
+    it("as set", function(done) {
+      var Model = {
+        name: 'user',
+        searchCols: {
+          name: {
+            op: 'LIKE',
+            match: ['%{1}%']
+          }
+        }
+      };
+      var real = utils.searchOpt(Model, '', 'a', 'user');
+      assert.deepEqual([], real);
+      done();
+    });
+
+    it("as set searchStr set", function(done) {
+      var Model = {
+        name: 'user',
+        searchCols: {
+          name: {
+            op: 'LIKE',
+            match: ['%{1}%']
+          }
+        }
+      };
+      var real = utils.searchOpt(Model, 'name,user.name', 'a', 'user');
+      assert.deepEqual([["((`user`.`name` LIKE '%a%'))"]], real);
+      done();
+    });
+
+    it("as set searchStr set no match", function(done) {
+      var Model = {
+        name: 'user',
+        searchCols: {
+          name: {
+            op: 'LIKE',
+            match: ['%{1}%']
+          }
+        }
+      };
+      var real = utils.searchOpt(Model, 'email,address', 'a', 'user');
+      assert.deepEqual([], real);
+      done();
+    });
   });
 
   describe('#mergeSearchOrs', function() {
@@ -656,6 +740,65 @@ describe('utils', function() {
         offset: 100000,
         limit: 10000
       }, utils.pageParams(pagination, {startIndex: 100000000, maxResults: 2000000}));
+
+      done();
+    });
+  });
+
+  describe('#itemAttrFilter', function() {
+    it("noraml", function(done) {
+      var fn = utils.itemAttrFilter(['name', 'age', 'gender']);
+      var obj = {
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male',
+        email: '13740080@qq.com',
+        address: '北京市昌平区'
+      };
+
+      assert.deepEqual({
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male'
+      }, fn(obj));
+
+      done();
+    });
+  });
+
+  describe('#listAttrFilter', function() {
+    it('normal', function(done) {
+      var ls = [{
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male',
+        email: '13740080@qq.com',
+        address: '北京市昌平区'
+      }];
+      assert.deepEqual([{
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male'
+      }], utils.listAttrFilter(ls, ['name', 'age', 'gender']));
+
+      done();
+    });
+
+    it('allowAttrs unset', function(done) {
+      var ls = [{
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male',
+        email: '13740080@qq.com',
+        address: '北京市昌平区'
+      }];
+      assert.deepEqual([{
+        name: 'Redstone Zhao',
+        age: 36,
+        gender: 'male',
+        email: '13740080@qq.com',
+        address: '北京市昌平区'
+      }], utils.listAttrFilter(ls));
 
       done();
     });
