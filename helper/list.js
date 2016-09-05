@@ -56,7 +56,7 @@ var list = function(Model, opt, allowAttrs, hook) {
 module.exports = function(rest) {
   var Sequelize = rest.Sequelize;
 
-  var listSchemas = [{
+  var schemas = [{
     name: 'Model',
     type: Sequelize.Model,
     message: 'Model must be a class of Sequelize defined'
@@ -91,5 +91,5 @@ module.exports = function(rest) {
     message: 'Geted list will hook on req.hooks[hook], so `hook` must be a string'
   }];
 
-  return delegate(list, listSchemas);
+  return delegate(list, schemas);
 };
