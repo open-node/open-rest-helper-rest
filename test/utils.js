@@ -1,10 +1,26 @@
 var assert      = require('assert')
+  , _           = require('lodash')
   , rest        = require('open-rest')
   , Sequelize   = rest.Sequelize
   , utils       = require('../lib/utils')
   , sequelize   = new Sequelize();
 
 describe('utils', function() {
+
+  describe('#callback', function() {
+    it("normal", function(done) {
+      var promise = new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          resolve();
+        }, 100);
+      });
+      utils.callback(promise, function(error) {
+        assert.equal(null, error);
+        done();
+      });
+    });
+  });
+
   describe('#searchOpt', function() {
     var Model = {
       name: 'user',
@@ -844,6 +860,321 @@ describe('utils', function() {
         },
         offset: 0,
         limit: 10
+      }, opts);
+
+      done();
+    });
+
+    it("includes", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      Model.includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+
+      var params = {
+        includes: 'user',
+        showDelete: 'yes',
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id'
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      assert.deepEqual({
+        include: [Model.includes.user],
+        order: [['id', 'DESC']],
+        offset: 100,
+        limit: 10
+      }, opts);
+
+      done();
+    });
+
+    it("includes params.showDelete false", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      Model.includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+
+      var params = {
+        includes: 'user',
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      var include = _.clone(Model.includes.user);
+      include.where = {
+        $or: [{
+          isDelete: 'no'
+        }]
+      };
+      assert.deepEqual({
+        include: [include],
+        order: [['id', 'DESC']],
+        offset: 100,
+        where: {
+          isDelete: 'no'
+        },
+        limit: 10
+      }, opts);
+
+      done();
+    });
+
+    it("includes include required false, allowIncludeCols", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      Model.includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: false
+        }
+      };
+
+      Model.allowIncludeCols = ['id', 'name'];
+
+      var params = {
+        includes: 'user',
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      var include = _.clone(Model.includes.user);
+      include.where = {
+        $or: [{
+          isDelete: 'no'
+        }, {
+          id: null
+        }]
+      };
+      include.attributes = ['id', 'name'];
+      assert.deepEqual({
+        include: [include],
+        order: [['id', 'DESC']],
+        offset: 100,
+        where: {
+          isDelete: 'no'
+        },
+        limit: 10
+      }, opts);
+
+      done();
+    });
+
+    it("includes include required false, allowIncludeCols, search", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        email: Sequelize.STRING,
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      Model.includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: false
+        }
+      };
+
+      Model.searchCols = {
+        name: {
+          op: 'LIKE',
+          match: ['%{1}%']
+        },
+        email: {
+          op: 'LIKE',
+          match: ['%{1}%']
+        },
+        id: {
+          op: '=',
+          match: ['{1}']
+        }
+      };
+
+      Model.allowIncludeCols = ['id', 'name'];
+
+      var params = {
+        q: 'a',
+        attrs: 'id,name',
+        includes: 'user',
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      var include = _.clone(Model.includes.user);
+      include.where = {
+        $or: [{
+          isDelete: 'no'
+        }, {
+          id: null
+        }]
+      };
+      include.attributes = ['id', 'name'];
+      assert.deepEqual({
+        include: [include],
+        order: [['id', 'DESC']],
+        offset: 100,
+        limit: 10,
+        where: {
+          isDelete: 'no',
+          $or: [[
+            "((((`book`.`name` LIKE '%a%')) OR ((`book`.`email` LIKE '%a%')) OR ((`book`.`id` = 'a'))))",
+            ['']
+          ]]
+        },
+        attributes: ['id', 'name']
+      }, opts);
+
+      done();
+    });
+
+    it("attrs type isnt string", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        email: Sequelize.STRING,
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      var params = {
+        attrs: [],
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      assert.deepEqual({
+        include: undefined,
+        order: [['id', 'DESC']],
+        offset: 100,
+        limit: 10,
+        where: {
+          isDelete: 'no'
+        }
+      }, opts);
+
+      params = {
+        attrs: 'friends,age',
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params);
+      assert.deepEqual({
+        include: undefined,
+        order: [['id', 'DESC']],
+        offset: 100,
+        limit: 10,
+        where: {
+          isDelete: 'no'
+        }
+      }, opts);
+
+      done();
+    });
+
+    it("isAll true", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        email: Sequelize.STRING,
+        isDelete: Sequelize.ENUM('yes', 'no')
+      });
+      Model.sort = {
+        default: 'id',
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+      };
+      var params = {
+        attrs: [],
+        startIndex: 100,
+        maxResults: 10,
+        sort: '-id',
+      };
+
+      var opts = utils.findAllOpts(Model, params, true);
+      assert.deepEqual({
+        include: undefined,
+        order: [['id', 'DESC']],
+        where: {
+          isDelete: 'no'
+        }
       }, opts);
 
       done();
