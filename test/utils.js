@@ -1,7 +1,8 @@
 var assert      = require('assert')
   , rest        = require('open-rest')
   , Sequelize   = rest.Sequelize
-  , utils       = require('../lib/utils');
+  , utils       = require('../lib/utils')
+  , sequelize   = new Sequelize();
 
 describe('utils', function() {
   describe('#searchOpt', function() {
@@ -452,6 +453,212 @@ describe('utils', function() {
       done();
     });
 
+  });
+
+  describe('#sort', function() {
+    it("conf unset", function(done) {
+      var params = {sort: 'name'};
+      assert.equal(undefined, utils.sort(params));
+      assert.equal(undefined, utils.sort(params, ''));
+      assert.equal(undefined, utils.sort(params, 0));
+
+      done();
+    });
+
+    it("params.sort unset", function(done) {
+      var params = {};
+      var conf = {
+        default: 'date',
+        defaultDirection: 'DESC'
+      };
+      assert.deepEqual([['date', 'DESC']], utils.sort(params, conf));
+
+      done();
+    });
+    it("params.sort unset and conf.default", function(done) {
+      var params = {};
+      var conf = {};
+      assert.equal(undefined, utils.sort(params, conf));
+
+      done();
+    });
+
+    it("params.sort set -id conf.allow unset", function(done) {
+      var params = {
+        sort: '-id'
+      };
+      var conf = {};
+      assert.equal(undefined, utils.sort(params, conf));
+
+      done();
+    });
+
+    it("params.sort set -id conf.allow set", function(done) {
+      var params = {
+        sort: '-id'
+      };
+      var conf = {
+        allow: ['id']
+      };
+      assert.deepEqual([['id', 'DESC']], utils.sort(params, conf));
+
+      done();
+    });
+
+    it("params.sort set id, conf.allow set", function(done) {
+      var params = {
+        sort: 'id'
+      };
+      var conf = {
+        allow: ['id']
+      };
+      assert.deepEqual([['id', 'ASC']], utils.sort(params, conf));
+
+      done();
+    });
+  });
+
+  describe('#modelInclude', function() {
+    it("include unset", function(done) {
+      var params = {};
+      assert.equal(undefined, utils.modelInclude(params));
+      assert.equal(undefined, utils.modelInclude(params, undefined));
+      assert.equal(undefined, utils.modelInclude(params, null));
+      assert.equal(undefined, utils.modelInclude(params, ''));
+      assert.equal(undefined, utils.modelInclude(params, 0));
+
+      done();
+    });
+
+    it("params.includes unset or no string", function(done) {
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      assert.equal(undefined, utils.modelInclude({}, {user: {model: Model}}));
+      assert.equal(undefined, utils.modelInclude({includes: []}, {user: {model: Model}}));
+      assert.equal(undefined, utils.modelInclude({includes: {}}, {user: {model: Model}}));
+      assert.equal(undefined, utils.modelInclude({includes: 20}, {user: {model: Model}}));
+
+      done();
+    });
+
+    it("params.includes set one", function(done) {
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      var includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      assert.deepEqual([includes.user], utils.modelInclude({includes: 'user'}, includes));
+      done();
+    });
+
+    it("params.includes set two", function(done) {
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      var includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: true
+        },
+        company: {
+          model: Model,
+          as: 'company',
+          required: false
+        }
+      };
+      assert.deepEqual([includes.user, includes.company], utils.modelInclude({includes: 'user,company'}, includes));
+      done();
+    });
+
+    it("params.includes no match", function(done) {
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      var includes = {
+        user: {
+          model: Model,
+          as: 'creator',
+          required: true
+        },
+        company: {
+          model: Model,
+          as: 'company',
+          required: false
+        }
+      };
+      assert.equal(undefined, utils.modelInclude({includes: 'author'}, includes));
+      done();
+    });
+  });
+
+  describe('#pageParams', function() {
+    it("pagination unset, params unset", function(done) {
+      assert.deepEqual({
+        offset: 0,
+        limit: 10
+      }, utils.pageParams(null, {}));
+
+      done();
+    });
+
+    it("pagination unset, params set", function(done) {
+      assert.deepEqual({
+        offset: 100,
+        limit: 20
+      }, utils.pageParams(null, {startIndex: 100, maxResults: 20}));
+
+      done();
+    });
+
+    it("pagination unset, params beyond limit", function(done) {
+      assert.deepEqual({
+        offset: 10000,
+        limit: 1000
+      }, utils.pageParams(null, {startIndex: 100000000, maxResults: 2000000}));
+
+      done();
+    });
+
+    it("pagination set, params beyond limit", function(done) {
+      var pagination = {
+        maxResults: 100,
+        maxStartIndex: 100000,
+        maxResultsLimit: 10000,
+      };
+      assert.deepEqual({
+        offset: 100000,
+        limit: 10000
+      }, utils.pageParams(pagination, {startIndex: 100000000, maxResults: 2000000}));
+
+      done();
+    });
   });
 
   describe('#findOpts', function() {
