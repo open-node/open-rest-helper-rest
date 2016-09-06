@@ -1,6 +1,7 @@
-var assert = require('assert')
-  , rest = require('open-rest')
-  , stats = require('../lib/stats')(rest);
+var assert      = require('assert')
+  , rest        = require('open-rest')
+  , Sequelize   = rest.Sequelize
+  , stats       = require('../lib/stats')(rest);
 
 describe('stats', function() {
   describe('metrics', function() {
@@ -321,7 +322,7 @@ describe('stats', function() {
         }
       };
       params = {};
-      expected = {};
+      expected = [];
       assert.deepEqual(stats.filters(Model, params.filters), expected);
       return done();
     });
@@ -644,9 +645,9 @@ describe('stats', function() {
       stats.statsCount(Model, {}, null, function(error, count) {
         assert.equal(null, error);
         assert.equal(1, count);
+        done();
       });
 
-      done();
     });
 
     it("dims empty array", function(done) {
@@ -662,9 +663,9 @@ describe('stats', function() {
       stats.statsCount(Model, {}, [], function(error, count) {
         assert.equal(null, error);
         assert.equal(1, count);
-      });
 
-      done();
+        done();
+      });
     });
 
     it("noraml", function(done) {
@@ -678,7 +679,6 @@ describe('stats', function() {
         },
         findOne: function(options) {
           assert.deepEqual({
-            where: undefined,
             raw: true,
             include: [{
               model: Model,
@@ -710,9 +710,9 @@ describe('stats', function() {
       stats.statsCount(Model, opt, dims, function(error, count) {
         assert.equal(null, error);
         assert.equal(20, count);
+        done();
       });
 
-      done();
     });
 
     it("noraml opt.include unset", function(done) {
@@ -726,7 +726,6 @@ describe('stats', function() {
         },
         findOne: function(options) {
           assert.deepEqual({
-            where: undefined,
             raw: true,
             attributes: [
               'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`'
@@ -747,9 +746,571 @@ describe('stats', function() {
       stats.statsCount(Model, opt, dims, function(error, count) {
         assert.equal(null, error);
         assert.equal(20, count);
+        done();
       });
 
-      done();
     });
+  });
+
+  describe('statistics', function() {
+
+    it("normal", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findAll = function(options) {
+        assert.deepEqual({
+          attributes: [
+            "Date(`createdAt`) AS `date`",
+            "`creatorId` AS `user`",
+            "COUNT(*) AS `count`"
+          ],
+          where: {
+            $and: [
+              {id: {$gte: 200}},
+              [
+                "`isDelete`='no'",
+                [
+                  ""
+                ]
+              ]
+            ]
+          },
+          group: [
+            "`date`",
+            "`user`"
+          ],
+          offset: 0,
+          limit: 20,
+          include: [{
+            model: Model,
+            as: 'creator',
+            required: true,
+            attributes: []
+          }],
+          raw: true
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve([{
+              date: '2016-04-15',
+              user: '赵思源',
+              count: 100000000
+            }, {
+              date: '2016-04-16',
+              user: '赵思鸣',
+              count: 100000000
+            }]);
+          }, 50);
+        });
+      },
+      Model.findOne = function(options) {
+        assert.deepEqual({
+          where: {
+            $and: [
+              {id: {$gte: 200}},
+              [
+                "`isDelete`='no'",
+                [
+                  ""
+                ]
+              ]
+            ]
+          },
+          raw: true,
+          include: [{
+            model: Model,
+            as: 'creator',
+            required: true,
+            attributes: []
+          }],
+          attributes: [
+            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+          ]
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve({count: 20});
+          }, 50);
+        });
+      };
+      var params = {
+        dimensions: 'date,user',
+        metrics: 'count',
+        id_gte: 200,
+        includes: 'creator'
+      };
+      var where = "`isDelete`='no'";
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      stats.statistics(Model, params, where, conf, function(error, result) {
+        assert.equal(null, error);
+        assert.equal(20, result[1]);
+        assert.deepEqual([{
+          date: '2016-04-15',
+          user: '赵思源',
+          count: 100000000
+        }, {
+          date: '2016-04-16',
+          user: '赵思鸣',
+          count: 100000000
+        }], result[0]);
+        done();
+      });
+
+    });
+
+    it("no listOpts.where/include, where is null", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findAll = function(options) {
+        assert.deepEqual({
+          attributes: [
+            "Date(`createdAt`) AS `date`",
+            "`creatorId` AS `user`",
+            "COUNT(*) AS `count`"
+          ],
+          group: [
+            "`date`",
+            "`user`"
+          ],
+          offset: 0,
+          limit: 20,
+          raw: true
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve([{
+              date: '2016-04-15',
+              user: '赵思源',
+              count: 100000000
+            }, {
+              date: '2016-04-16',
+              user: '赵思鸣',
+              count: 100000000
+            }]);
+          }, 50);
+        });
+      },
+      Model.findOne = function(options) {
+        assert.deepEqual({
+          raw: true,
+          attributes: [
+            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+          ]
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve({count: 20});
+          }, 50);
+        });
+      };
+      var params = {
+        dimensions: 'date,user',
+        metrics: 'count'
+      };
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      stats.statistics(Model, params, null, conf, function(error, result) {
+        assert.equal(null, error);
+        assert.equal(20, result[1]);
+        assert.deepEqual([{
+          date: '2016-04-15',
+          user: '赵思源',
+          count: 100000000
+        }, {
+          date: '2016-04-16',
+          user: '赵思鸣',
+          count: 100000000
+        }], result[0]);
+        done();
+      });
+    });
+
+    it("no where, no dimensions", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findAll = function(options) {
+        assert.deepEqual({
+          attributes: [
+            "COUNT(*) AS `count`"
+          ],
+          offset: 0,
+          limit: 20,
+          where: {
+            $and: [
+              [
+                {
+                  $or: [
+                    ["Date(`createdAt`)=?", ["2016"]]
+                  ]
+                }
+              ]
+            ]
+          },
+          raw: true
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve([{
+              count: 2
+            }]);
+          }, 50);
+        });
+      };
+      var params = {
+        metrics: 'count',
+        filters: 'date==2016'
+      };
+      var where = null;
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      stats.statistics(Model, params, where, conf, function(error, result) {
+        assert.equal(null, error);
+        assert.equal(1, result[1]);
+        assert.deepEqual([{
+          count: 2
+        }], result[0]);
+        done();
+      });
+    });
+
+    it("no listOpts.where/include, where isnt a string", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findAll = function(options) {
+        assert.deepEqual({
+          attributes: [
+            "Date(`createdAt`) AS `date`",
+            "`creatorId` AS `user`",
+            "COUNT(*) AS `count`"
+          ],
+          group: [
+            "`date`",
+            "`user`"
+          ],
+          where: {
+            $and: [
+              {id: {$eq: 200}}
+            ]
+          },
+          offset: 0,
+          limit: 20,
+          raw: true
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve([{
+              date: '2016-04-15',
+              user: '赵思源',
+              count: 100000000
+            }, {
+              date: '2016-04-16',
+              user: '赵思鸣',
+              count: 100000000
+            }]);
+          }, 50);
+        });
+      },
+      Model.findOne = function(options) {
+        assert.deepEqual({
+          raw: true,
+          where: {
+            $and: [
+              {id: {$eq: 200}}
+            ]
+          },
+          attributes: [
+            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+          ]
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            resolve({count: 20});
+          }, 50);
+        });
+      };
+      var params = {
+        dimensions: 'date,user',
+        metrics: 'count'
+      };
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      var where = {id: {$eq: 200}};
+      stats.statistics(Model, params, where, conf, function(error, result) {
+        assert.equal(null, error);
+        assert.equal(20, result[1]);
+        assert.deepEqual([{
+          date: '2016-04-15',
+          user: '赵思源',
+          count: 100000000
+        }, {
+          date: '2016-04-16',
+          user: '赵思鸣',
+          count: 100000000
+        }], result[0]);
+        done();
+      });
+    });
+
+    it("statsCount error", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findOne = function(options) {
+        assert.deepEqual({
+          raw: true,
+          where: {
+            $and: [
+              {id: {$eq: 200}}
+            ]
+          },
+          attributes: [
+            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+          ]
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            reject(Error('Hello world'));
+          }, 50);
+        });
+      };
+      var params = {
+        dimensions: 'date,user',
+        metrics: 'count'
+      };
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      var where = {id: {$eq: 200}};
+      stats.statistics(Model, params, where, conf, function(error, result) {
+        assert.ok(error instanceof Error);
+        assert.equal('Hello world', error.message);
+        assert.equal(null, result);
+        done();
+      });
+    });
+
+    it("statistics throw expection", function(done) {
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100)
+      });
+      Model.includes = {
+        creator: {
+          model: Model,
+          as: 'creator',
+          required: true
+        }
+      };
+      Model.stats = {
+        dimensions: {
+          user: "`creatorId`"
+        },
+        metrics: {
+          count: 'COUNT(*)'
+        },
+        pagination: {
+          maxResults: 20,
+          maxResultsLimit: 2000,
+          maxStartIndex: 50000
+        }
+      };
+      Model.findOne = function(options) {
+        assert.deepEqual({
+          raw: true,
+          where: {
+            $and: [
+              {id: {$eq: 200}}
+            ]
+          },
+          attributes: [
+            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+          ]
+        }, options);
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            reject(Error('Hello world'));
+          }, 50);
+        });
+      };
+      var params = {
+        dimensions: ['date', 'user'],
+        metrics: 'count'
+      };
+      var conf = {
+        dimensions: {
+          date: "Date(`createdAt`)"
+        }
+      };
+      var where = {id: {$eq: 200}};
+      var logger = rest.utils.logger;
+      rest.utils.logger = {
+        error: function(error, stack) {
+          assert.ok(error instanceof Error);
+          assert.equal('Dimensions must be a string', error.message);
+        }
+      };
+      stats.statistics(Model, params, where, conf, function(error, result) {
+        assert.ok(error instanceof Error);
+        assert.equal('Dimensions must be a string', error.message);
+        assert.equal(null, result);
+        rest.utils.logger = logger;
+        done();
+      });
+    });
+
   });
 });
