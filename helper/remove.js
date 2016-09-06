@@ -13,7 +13,7 @@ var remove = function(hook) {
       if (!model.isDelete) return model.destroy();
       model.isDelete = 'yes';
       return model.save();
-    })().then(function(mod) {
+    })().then(function() {
       res.send(204);
       next();
     }).catch(next);

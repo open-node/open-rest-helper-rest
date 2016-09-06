@@ -13,7 +13,7 @@ var Model = sequelize.define('book', {
   name: Sequelize.STRING(100)
 });
 
-describe("open-rest-helper-rest", function() {
+describe("open-rest-helper-rest-list", function() {
 
   describe("list", function() {
 
