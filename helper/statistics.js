@@ -15,11 +15,11 @@ module.exports = function(rest) {
    * hook 可选, 默认为空，如果指定了hook，则数据不直接输出而是先挂在 hook上
    * conf 可选，统计功能的配置，req 对象上值的路径例如 'hooks.user.conf'
    */
-  var statistics = function(Model, opt, hook, conf) {
+  var statistics = function(Model, opt, hook, _conf) {
 
     return function(req, res, next) {
-      var conf = conf ? _.get(req, conf) : null;
-      var where = opt ? _.get(req, opt) : '';
+      var conf = _conf ? _.get(req, _conf) : null;
+      var where = opt ? _.get(req, opt).where : '';
       stats.statistics(Model, req.params, where, conf, function(error, ret) {
         if (error) return next(error);
         var data = ret[0]
@@ -59,4 +59,3 @@ module.exports = function(rest) {
 
   return delegate(statistics, schemas);
 };
-
