@@ -251,6 +251,7 @@ describe('stats', function() {
       return done();
     });
   });
+
   describe('filters', function() {
     it("动态维度", function(done) {
       var Model, expected, params, _dims;
@@ -435,6 +436,7 @@ describe('stats', function() {
       return done();
     });
   });
+
   describe('sort', function() {
     it("no set", function(done) {
       var expected, params;
@@ -490,7 +492,8 @@ describe('stats', function() {
       return done();
     });
   });
-  return describe('pageParams', function() {
+
+  describe('pageParams', function() {
     it("default no set", function(done) {
       var Model, expected, params;
       Model = {
@@ -624,6 +627,129 @@ describe('stats', function() {
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
+    });
+  });
+
+  describe('statsCount', function() {
+    it("dims unset", function(done) {
+      var Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000
+          }
+        }
+      };
+      stats.statsCount(Model, {}, null, function(error, count) {
+        assert.equal(null, error);
+        assert.equal(1, count);
+      });
+
+      done();
+    });
+
+    it("dims empty array", function(done) {
+      var Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000
+          }
+        }
+      };
+      stats.statsCount(Model, {}, [], function(error, count) {
+        assert.equal(null, error);
+        assert.equal(1, count);
+      });
+
+      done();
+    });
+
+    it("noraml", function(done) {
+      var Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000
+          }
+        },
+        findOne: function(options) {
+          assert.deepEqual({
+            where: undefined,
+            raw: true,
+            include: [{
+              model: Model,
+              as: 'creator',
+              required: true
+            }],
+            attributes: [
+              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`'
+            ]
+          }, options);
+          return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+              resolve({count: 20});
+            }, 50);
+          });
+        }
+      };
+      var opt = {
+        include: [{
+          model: Model,
+          as: 'creator',
+          required: true
+        }]
+      };
+      var dims = [
+        "`creatorId` AS `user`",
+        "DATE(`createdAt`) AS `date`"
+      ];
+      stats.statsCount(Model, opt, dims, function(error, count) {
+        assert.equal(null, error);
+        assert.equal(20, count);
+      });
+
+      done();
+    });
+
+    it("noraml opt.include unset", function(done) {
+      var Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000
+          }
+        },
+        findOne: function(options) {
+          assert.deepEqual({
+            where: undefined,
+            raw: true,
+            attributes: [
+              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`'
+            ]
+          }, options);
+          return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+              resolve({count: 20});
+            }, 50);
+          });
+        }
+      };
+      var opt = {};
+      var dims = [
+        "`creatorId` AS `user`",
+        "DATE(`createdAt`) AS `date`"
+      ];
+      stats.statsCount(Model, opt, dims, function(error, count) {
+        assert.equal(null, error);
+        assert.equal(20, count);
+      });
+
+      done();
     });
   });
 });
