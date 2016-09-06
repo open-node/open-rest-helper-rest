@@ -12,8 +12,9 @@ var beforeModify = function(Model, hook, cols) {
 
   return function(req, res, next) {
     var model = req.hooks[hook]
-      , attr = U.pickParams(req, cols, Model);
+      , attr;
     cols = cols || Model.editableCols || Model.writableCols;
+    attr = U.pickParams(req, cols, Model);
     delete attr.id
     _.each(attr, function(v, k) {
       if (model[k] === v) return;
@@ -45,7 +46,7 @@ module.exports = function(rest) {
         var Model = args[0];
         _.each(keys, function(v) {
           if (!_.isString(v)) {
-            throw Error('Every item in allowAttrs must be a string.');
+            throw Error('Every item in cols must be a string.');
           }
           if (!Model.rawAttributes[v]) {
             throw Error('Attr non-exists: ' + v);
