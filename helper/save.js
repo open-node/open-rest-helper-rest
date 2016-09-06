@@ -13,15 +13,16 @@ module.exports = function(rest) {
   var save = function(Model, hook) {
 
     return function(req, res, next) {
-      var model = req.hooks[hook];
+      var model = req.hooks[hook]
+        , changed = model.changed();
       // 如果没有变化，则不需要保存，也不需要记录日志
-      if (!model.changed()) {
+      if (!changed) {
         req._resourceNotChanged = true;
         res.header("X-Content-Resource-Status", 'Unchanged');
-        res.send(200, model);
+        res.send(model);
         return next();
       }
-      model.save().then(function(mod) {
+      model.save({fields: changed}).then(function(mod) {
         res.send(mod);
         next();
       }).catch(function(error) {

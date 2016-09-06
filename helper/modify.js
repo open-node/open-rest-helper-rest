@@ -7,9 +7,6 @@ var delegate      = require('func-delegate')
 module.exports = function(rest) {
   var Sequelize = rest.Sequelize;
 
-  var before = beforeModify(rest);
-  var after = save(rest);
-
   /**
    * 修改某个资源描述的方法
    * Model 必选, Sequlize 定义的Model，表明数据的原型
@@ -18,10 +15,13 @@ module.exports = function(rest) {
    */
   var modify = function(Model, hook, cols) {
 
+    var before = beforeModify(rest)(Model, hook, cols);
+    var after = save(rest)(Model, hook);
+
     return function(req, res, next) {
-      before(Model, hook, cols)(req, res, function(error) {
+      before(req, res, function(error) {
         if (error) return next(error);
-        after(Model, hook)(req, res, next);
+        after(req, res, next);
       });
     };
 
