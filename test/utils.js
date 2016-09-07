@@ -1242,6 +1242,114 @@ describe('utils', function() {
       done();
     });
 
+    it("column is number type, value isnt null", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin',
+          status: 'enabled',
+          price: '999999'
+        },
+        isAdmin: false
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        price: Sequelize.INTEGER.UNSIGNED,
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        price: 999999
+      }, utils.pickParams(req, ['price'], Model));
+
+      done();
+    });
+
+    it("column is number type, value is null, allowNull false", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin',
+          status: 'enabled',
+          price: null
+        },
+        isAdmin: true
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        price: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          allowNull: false,
+          defaultValue: 888888
+        },
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        name: 'Redstone Zhao',
+        role: 'admin',
+        price: 888888
+      }, utils.pickParams(req, ['price', 'name', 'role'], Model));
+
+      done();
+    });
+
+    it("column is number type, value is null, allowNull: true", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin',
+          status: 'enabled',
+          price: null
+        },
+        isAdmin: true
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        price: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          allowNull: true,
+          defaultValue: 888888
+        },
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        name: 'Redstone Zhao',
+        role: 'admin',
+        price: null
+      }, utils.pickParams(req, ['price', 'name', 'role'], Model));
+
+      done();
+    });
+
   });
 
 });
