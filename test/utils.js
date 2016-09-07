@@ -1181,4 +1181,67 @@ describe('utils', function() {
     });
   });
 
+  describe('#pickParams', function() {
+
+    it("onlyAdminCols, current isnt admin", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin'
+        },
+        isAdmin: false
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        name: 'Redstone Zhao'
+      }, utils.pickParams(req, ['name', 'role'], Model));
+
+      done();
+    });
+
+    it("onlyAdminCols, current isnt admin", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin',
+          status: 'enabled'
+        },
+        isAdmin: false
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        name: 'Redstone Zhao'
+      }, utils.pickParams(req, ['name', 'role', 'status', 'email'], Model));
+
+      done();
+    });
+
+  });
+
 });
