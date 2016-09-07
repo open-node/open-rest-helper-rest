@@ -186,4 +186,3 @@ describe("open-rest-helper-rest-beforeModify", function() {
   });
 
 });
-

@@ -54,7 +54,7 @@ module.exports = function(rest) {
             model.isDelete = 'no';
           } else {
             // 资源已经存在，重复了
-            next(errors.ifError(Error('Resource exists.'), Model.unique[0]))
+            return next(rest.errors.ifError(Error('Resource exists.'), Model.unique[0]))
           }
         } else {
           // 构建一个全新的资源
@@ -80,7 +80,7 @@ module.exports = function(rest) {
         var Model = args[0];
         _.each(keys, function(v) {
           if (!_.isString(v)) {
-            throw Error('Every item in allowAttrs must be a string.');
+            throw Error('Every item in cols must be a string.');
           }
           if (!Model.rawAttributes[v]) {
             throw Error('Attr non-exists: ' + v);
