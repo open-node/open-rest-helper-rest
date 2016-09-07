@@ -11,15 +11,15 @@ module.exports = function(rest) {
   /**
    * 获取单个资源详情的方法
    * Model 必选，Sequlize 定义的Model，表明数据从哪里获取
-   * opt 可选，是否要去req.hooks上去 options
+   * where 可选，额外的条件, req 对象上的路径，例如 'hooks.option.where',
    * hook 可选, 默认为空，如果指定了hook，则数据不直接输出而是先挂在 hook上
    * conf 可选，统计功能的配置，req 对象上值的路径例如 'hooks.user.conf'
    */
-  var statistics = function(Model, opt, hook, _conf) {
+  var statistics = function(Model, _where, hook, _conf) {
 
     return function(req, res, next) {
       var conf = _conf ? _.get(req, _conf) : null;
-      var where = opt ? _.get(req, opt).where : '';
+      var where = _where ? _.get(req, _where) : '';
       stats.statistics(Model, req.params, where, conf, function(error, ret) {
         if (error) return next(error);
         var data = ret[0]
@@ -41,10 +41,10 @@ module.exports = function(rest) {
     type: Sequelize.Model,
     message: 'Model must be a class of Sequelize defined'
   }, {
-    name: 'opt',
+    name: 'where',
     type: String,
     allowNull: true,
-    message: "FindAll option req's value path, so `opt` must be a string"
+    message: "FindAll option condition, req's value path, so `where` must be a string"
   }, {
     name: 'hook',
     type: String,

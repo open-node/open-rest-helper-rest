@@ -1,16 +1,12 @@
-var delegate      = require('func-delegate')
-  , U             = require('../lib/utils')
-  , _             = require('lodash');
+var delegate      = require('func-delegate');
 
 module.exports = function(rest) {
-  var Sequelize = rest.Sequelize;
 
   /**
    * 修改某个资源描述的后置方法, 将变化保存到数据库
-   * Model 必选, Sequlize 定义的Model，表明数据的原型
    * hook 必选, 实例的存放位置
    */
-  var save = function(Model, hook) {
+  var save = function(hook) {
 
     return function(req, res, next) {
       var model = req.hooks[hook]
@@ -33,10 +29,6 @@ module.exports = function(rest) {
   };
 
   var schemas = [{
-    name: 'Model',
-    type: Sequelize.Model,
-    message: 'Model must be a class of Sequelize defined'
-  }, {
     name: 'hook',
     type: String,
     allowNull: false,

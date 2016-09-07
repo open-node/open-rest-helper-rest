@@ -39,7 +39,7 @@ describe("open-rest-helper-rest-statistics", function() {
       assert.throws(function() {
         helper.statistics(Model, {});
       }, function(err) {
-        return err instanceof Error && err.message === "FindAll option req's value path, so `opt` must be a string";
+        return err instanceof Error && err.message === "FindAll option condition, req's value path, so `where` must be a string";
       });
       done();
     });
@@ -208,7 +208,7 @@ describe("open-rest-helper-rest-statistics", function() {
           assert.equal(20, value);
         }
       };
-      var statistics = helper.statistics(Model, 'hooks.opt', null, 'hooks.conf');
+      var statistics = helper.statistics(Model, 'hooks.opt.where', null, 'hooks.conf');
       statistics(req, res, function(error) {
         assert.equal(null, error);
         done();
@@ -350,7 +350,7 @@ describe("open-rest-helper-rest-statistics", function() {
       var statistics = helper
                         .statistics
                         .Model(Model)
-                        .opt('hooks.opt')
+                        .where('hooks.opt.where')
                         .hook('stats')
                         .conf('hooks.conf')
                         .exec();
@@ -504,7 +504,7 @@ describe("open-rest-helper-rest-statistics", function() {
       var statistics = helper
                         .statistics
                         .Model(Model)
-                        .opt('hooks.opt')
+                        .where('hooks.opt.where')
                         .hook('stats')
                         .conf('hooks.conf')
                         .exec();
@@ -650,7 +650,7 @@ describe("open-rest-helper-rest-statistics", function() {
       var statistics = helper
                         .statistics
                         .Model(Model)
-                        .opt('hooks.opt')
+                        .where('hooks.opt.where')
                         .hook('stats')
                         .conf('hooks.conf')
                         .exec();

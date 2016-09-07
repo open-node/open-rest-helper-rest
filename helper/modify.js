@@ -16,7 +16,7 @@ module.exports = function(rest) {
   var modify = function(Model, hook, cols) {
 
     var before = beforeModify(rest)(Model, hook, cols);
-    var after = save(rest)(Model, hook);
+    var after = save(rest)(hook);
 
     return function(req, res, next) {
       before(req, res, function(error) {

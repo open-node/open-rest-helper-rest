@@ -1,35 +1,14 @@
 var assert      = require('assert')
   , rest        = require('open-rest')
-  , Sequelize   = rest.Sequelize
   , helper      = require('../')(rest);
-
-var sequelize = new Sequelize();
-var Model = sequelize.define('book', {
-  id: {
-    type: Sequelize.INTEGER.UNSIGNED,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  name: Sequelize.STRING(100),
-  age: Sequelize.INTEGER.UNSIGNED
-});
 
 describe("open-rest-helper-rest-save", function() {
 
   describe("Argument validate error", function() {
 
-    it("Model argument unset", function(done) {
-      assert.throws(function() {
-        helper.save();
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
-      });
-      done();
-    });
-
     it("hook argument type error", function(done) {
       assert.throws(function() {
-        helper.save(Model, {});
+        helper.save({});
       }, function(err) {
         return err instanceof Error && err.message === 'Will modify instance hook on req.hooks[hook], so `hook` must be a string'
       });
@@ -42,7 +21,7 @@ describe("open-rest-helper-rest-save", function() {
 
     it("normal changed", function(done) {
 
-      var save = helper.save(Model, 'user');
+      var save = helper.save('user');
 
       var req = {
         hooks: {
@@ -95,7 +74,7 @@ describe("open-rest-helper-rest-save", function() {
 
     it("normal unchanged", function(done) {
 
-      var save = helper.save(Model, 'user');
+      var save = helper.save('user');
 
       var req = {
         hooks: {
@@ -135,7 +114,7 @@ describe("open-rest-helper-rest-save", function() {
 
     it("Has error when save", function(done) {
 
-      var save = helper.save(Model, 'user');
+      var save = helper.save('user');
 
       var req = {
         hooks: {
@@ -187,5 +166,3 @@ describe("open-rest-helper-rest-save", function() {
   });
 
 });
-
-
