@@ -1,12 +1,12 @@
 var delegate      = require('func-delegate')
   , U             = require('../lib/utils')
   , beforeAdd     = require('./before-add')
+  , detailHelper  = require('./detail')
   , _             = require('lodash');
 
 module.exports = function(rest) {
   var Sequelize = rest.Sequelize;
 
-  var before = beforeAdd(rest);
 
   /**
    * 根据资源描述添加资源到集合上的方法
@@ -17,10 +17,17 @@ module.exports = function(rest) {
    */
   var add = function(Model, cols, hook, attachs) {
 
+    // 这里hook其实是必须的，因为这里把 add 分成两个部分，
+    // 为了避免冲突导致，这里引入了随机字符串
+    if (!hook) hook = Model.name + '_' + rest.utils.randStr(10);
+
+    var before = beforeAdd(rest)(Model, cols, hook);
+    var detail = detailHelper(rest)(hook, attachs, 201);
+
     return function(req, res, next) {
-      before(Model, cols, hook)(req, res, function(error) {
+      before(req, res, function(error) {
         if (error) return next(error);
-        rest.detail(hook, attachs, 201)(req, res, next);
+        detail(req, res, next);
       });
     };
 
@@ -39,7 +46,7 @@ module.exports = function(rest) {
         var Model = args[0];
         _.each(keys, function(v) {
           if (!_.isString(v)) {
-            throw Error('Every item in allowAttrs must be a string.');
+            throw Error('Every item in cols must be a string.');
           }
           if (!Model.rawAttributes[v]) {
             throw Error('Attr non-exists: ' + v);
@@ -48,12 +55,12 @@ module.exports = function(rest) {
         return true;
       }
     },
-    message: "Allow modify attrs's name array"
+    message: "Allow writed attrs's name array"
   }, {
     name: 'hook',
     type: String,
-    allowNull: false,
-    message: 'Will modify instance hook on req.hooks[hook], so `hook` must be a string'
+    allowNull: true,
+    message: 'Added instance will hook on req.hooks[hook], so `hook` must be a string'
   }, {
     name: 'attachs',
     type: Object,
