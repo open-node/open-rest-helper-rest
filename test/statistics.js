@@ -210,7 +210,11 @@ describe("open-rest-helper-rest-statistics", function() {
       };
       var statistics = helper.statistics(Model, 'hooks.opt.where', null, 'hooks.conf');
       statistics(req, res, function(error) {
-        assert.equal(null, error);
+        try {
+          assert.equal(null, error);
+        } catch (e) {
+          return done(e);
+        }
         done();
       });
 
@@ -355,16 +359,20 @@ describe("open-rest-helper-rest-statistics", function() {
                         .conf('hooks.conf')
                         .exec();
       statistics(req, res, function(error) {
-        assert.equal(null, error);
-        assert.deepEqual([{
-          date: '2016-04-15',
-          user: '赵思源',
-          count: 100000000
-        }, {
-          date: '2016-04-16',
-          user: '赵思鸣',
-          count: 100000000
-        }], req.hooks.stats);
+        try {
+          assert.equal(null, error);
+          assert.deepEqual([{
+            date: '2016-04-15',
+            user: '赵思源',
+            count: 100000000
+          }, {
+            date: '2016-04-16',
+            user: '赵思鸣',
+            count: 100000000
+          }], req.hooks.stats);
+        } catch (e) {
+          return done(e);
+        }
         done();
       });
 
@@ -509,16 +517,20 @@ describe("open-rest-helper-rest-statistics", function() {
                         .conf('hooks.conf')
                         .exec();
       statistics(req, res, function(error) {
-        assert.equal(null, error);
-        assert.deepEqual([{
-          date: '2016-04-15',
-          user: '赵思源',
-          count: 100000000
-        }, {
-          date: '2016-04-16',
-          user: '赵思鸣',
-          count: 100000000
-        }], req.hooks.stats);
+        try {
+          assert.equal(null, error);
+          assert.deepEqual([{
+            date: '2016-04-15',
+            user: '赵思源',
+            count: 100000000
+          }, {
+            date: '2016-04-16',
+            user: '赵思鸣',
+            count: 100000000
+          }], req.hooks.stats);
+        } catch (e) {
+          return done(e);
+        }
         done();
       });
 
@@ -557,23 +569,15 @@ describe("open-rest-helper-rest-statistics", function() {
       Model.findAll = function(options) {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
             "`creatorId` AS `user`",
             "COUNT(*) AS `count`"
           ],
           where: {
             $and: [
-              {id: {$gte: 200}},
-              [
-                "`isDelete`='no'",
-                [
-                  ""
-                ]
-              ]
+              {id: {$gte: 200}}
             ]
           },
           group: [
-            "`date`",
             "`user`"
           ],
           offset: 0,
@@ -596,13 +600,7 @@ describe("open-rest-helper-rest-statistics", function() {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}},
-              [
-                "`isDelete`='no'",
-                [
-                  ""
-                ]
-              ]
+              {id: {$gte: 200}}
             ]
           },
           raw: true,
@@ -613,7 +611,7 @@ describe("open-rest-helper-rest-statistics", function() {
             attributes: []
           }],
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
+            "COUNT(DISTINCT `creatorId`) AS `count`"
           ]
         }, options);
         return new Promise(function(resolve, reject) {
@@ -624,21 +622,12 @@ describe("open-rest-helper-rest-statistics", function() {
       };
       var req = {
         params: {
-          dimensions: 'date,user',
+          dimensions: 'user',
           metrics: 'count',
           id_gte: 200,
           includes: 'creator'
         },
-        hooks: {
-          opt: {
-            where: "`isDelete`='no'"
-          },
-          conf: {
-            dimensions: {
-              date: "Date(`createdAt`)"
-            }
-          }
-        }
+        hooks: {}
       };
 
       var res = {
@@ -650,13 +639,15 @@ describe("open-rest-helper-rest-statistics", function() {
       var statistics = helper
                         .statistics
                         .Model(Model)
-                        .where('hooks.opt.where')
                         .hook('stats')
-                        .conf('hooks.conf')
                         .exec();
       statistics(req, res, function(error) {
-        assert.ok(error instanceof Error);
-        assert.equal('Hello world', error.message);
+        try {
+          assert.ok(error instanceof Error);
+          assert.equal('Hello world', error.message);
+        } catch (e) {
+          return done(e);
+        }
         done();
       });
 
