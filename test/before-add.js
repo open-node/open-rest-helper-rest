@@ -392,7 +392,6 @@ describe("open-rest-helper-rest-beforeAdd", function() {
               save: function() {
                 return new Promise(function(resolve, reject) {
                   setTimeout(function() {
-                    console.log('fuck');
                     resolve({
                       id: 1,
                       name: 'Redstone Zhao',
@@ -498,7 +497,6 @@ describe("open-rest-helper-rest-beforeAdd", function() {
               save: function() {
                 return new Promise(function(resolve, reject) {
                   setTimeout(function() {
-                    console.log('fuck');
                     resolve({
                       id: 1,
                       name: 'Redstone Zhao',

@@ -3,6 +3,8 @@ var assert      = require('assert')
   , Sequelize   = rest.Sequelize
   , stats       = require('../lib/stats')(rest);
 
+var sequelize = new Sequelize();
+
 describe('stats', function() {
   describe('metrics', function() {
     it("动态的指标配置", function(done) {
@@ -755,7 +757,6 @@ describe('stats', function() {
   describe('statistics', function() {
 
     it("normal", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -890,7 +891,6 @@ describe('stats', function() {
     });
 
     it("no listOpts.where/include, where is null", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -987,7 +987,6 @@ describe('stats', function() {
     });
 
     it("no where, no dimensions", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1065,7 +1064,6 @@ describe('stats', function() {
     });
 
     it("no listOpts.where/include, where isnt a string", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1173,7 +1171,6 @@ describe('stats', function() {
     });
 
     it("statsCount error", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1239,7 +1236,6 @@ describe('stats', function() {
     });
 
     it("statistics throw expection", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,

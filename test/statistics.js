@@ -67,7 +67,6 @@ describe("open-rest-helper-rest-statistics", function() {
   describe('Argument validate pass', function() {
 
     it("normal", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -221,7 +220,6 @@ describe("open-rest-helper-rest-statistics", function() {
     });
 
     it("set hook, chainning call", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -379,7 +377,6 @@ describe("open-rest-helper-rest-statistics", function() {
     });
 
     it("set hook, chainning call", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -537,7 +534,6 @@ describe("open-rest-helper-rest-statistics", function() {
     });
 
     it("happen error", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,

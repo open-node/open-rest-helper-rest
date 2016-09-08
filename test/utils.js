@@ -5,6 +5,8 @@ var assert      = require('assert')
   , utils       = require('../lib/utils')
   , sequelize   = new Sequelize();
 
+var sequelize = new Sequelize();
+
 describe('utils', function() {
 
   describe('#callback', function() {
@@ -822,7 +824,6 @@ describe('utils', function() {
 
   describe('#findOpts', function() {
     it("normal", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -866,7 +867,6 @@ describe('utils', function() {
     });
 
     it("includes", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -908,7 +908,6 @@ describe('utils', function() {
     });
 
     it("includes params.showDelete false", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -958,7 +957,6 @@ describe('utils', function() {
     });
 
     it("includes include required false, allowIncludeCols", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1013,7 +1011,6 @@ describe('utils', function() {
     });
 
     it("includes include required false, allowIncludeCols, search", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1091,7 +1088,6 @@ describe('utils', function() {
     });
 
     it("attrs type isnt string", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1146,7 +1142,6 @@ describe('utils', function() {
     });
 
     it("isAll true", function(done) {
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1192,7 +1187,6 @@ describe('utils', function() {
         isAdmin: false
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1222,7 +1216,6 @@ describe('utils', function() {
         isAdmin: false
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1253,7 +1246,6 @@ describe('utils', function() {
         isAdmin: false
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1285,7 +1277,6 @@ describe('utils', function() {
         isAdmin: true
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1323,7 +1314,6 @@ describe('utils', function() {
         isAdmin: true
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -1361,7 +1351,6 @@ describe('utils', function() {
         isAdmin: true
       };
 
-      var sequelize = new Sequelize();
       var Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
