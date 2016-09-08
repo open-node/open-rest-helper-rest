@@ -1350,6 +1350,44 @@ describe('utils', function() {
       done();
     });
 
+    it("column is number type, value is 0, allowNull: true", function(done) {
+      var req = {
+        params: {
+          name: 'Redstone Zhao',
+          role: 'admin',
+          status: 'enabled',
+          price: 0
+        },
+        isAdmin: true
+      };
+
+      var sequelize = new Sequelize();
+      var Model = sequelize.define('book', {
+        id: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        name: Sequelize.STRING(100),
+        price: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          allowNull: true,
+          defaultValue: 888888
+        },
+        role: Sequelize.ENUM('member', 'admin')
+      });
+
+      Model.onlyAdminCols = ['role'];
+
+      assert.deepEqual({
+        name: 'Redstone Zhao',
+        role: 'admin',
+        price: 0
+      }, utils.pickParams(req, ['price', 'name', 'role'], Model));
+
+      done();
+    });
+
   });
 
 });

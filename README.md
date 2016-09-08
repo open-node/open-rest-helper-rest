@@ -169,8 +169,9 @@ restHelper
 // Model 必选, Sequlize 定义的Model，表明数据的原型
 // cols 可选, 允许设置的字段
 // hook 可选, 生成实例的存放位置
+// attachs 可选，要附加输出的数据格式为 key => value, value 是 req 上的路径字符串
 
-restHelper.add(Model, cols, hook);
+restHelper.add(Model, cols, hook, attachs);
 
 // return
 // function(req, res, next) { ... };
