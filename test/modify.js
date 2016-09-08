@@ -220,6 +220,42 @@ describe("open-rest-helper-rest-modify", function() {
 
     });
 
+    it("Has error when beforeModify", function(done) {
+
+      var modify = helper.modify(Model, 'user', ['name', 'age']);
+
+      var req = {
+        hooks: {
+          user: {
+            id: 1,
+            name: 'Redstone Zhao',
+            age: 36,
+            changed: function() {
+              return ['name'];
+            }
+          }
+        }
+      };
+
+      var res = {
+        send: function(data) {
+          assert.equal(req.hooks.user, data);
+          assert.equal(true, req._resourceNotChanged);
+        },
+        header: function(key, value) {
+          assert.equal('X-Content-Resource-Status', key);
+          assert.equal('Unchanged', value);
+        }
+      };
+
+      modify(req, res, function(error) {
+        assert.ok(error instanceof Error);
+        assert.equal("Cannot read property 'hasOwnProperty' of undefined", error.message);
+
+        done();
+      });
+    });
+
   });
 
 });

@@ -14,7 +14,11 @@ var beforeModify = function(Model, hook, cols) {
     var model = req.hooks[hook]
       , attr;
     cols = cols || Model.editableCols || Model.writableCols;
-    attr = U.pickParams(req, cols, Model);
+    try {
+      attr = U.pickParams(req, cols, Model);
+    } catch (e) {
+      return next(e);
+    }
     delete attr.id
     _.each(attr, function(v, k) {
       if (model[k] === v) return;
