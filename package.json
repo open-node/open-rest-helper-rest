@@ -1,6 +1,6 @@
 {
   "name": "open-rest-helper-rest",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "open-rest 的 helper 插件，用来实现 CRUD 的标准操作",
   "main": "index.js",
   "scripts": {
@@ -26,13 +26,13 @@
   "homepage": "https://github.com/open-node/open-rest-helper-rest#readme",
   "dependencies": {
     "func-delegate": "^0.3.0",
-    "lodash": "^4.15.0",
-    "mysql": "^2.11.1"
+    "lodash": "*",
+    "mysql": "*"
   },
   "devDependencies": {
     "codecov": "^1.0.1",
     "istanbul": "^0.4.4",
     "mocha": "^3.0.2",
-    "open-rest": "^6.5.6"
+    "open-rest": "*"
   }
 }
