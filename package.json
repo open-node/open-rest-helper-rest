@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/open-node/open-rest-helper-rest#readme",
   "dependencies": {
+    "async": "^2.0.1",
     "func-delegate": "^0.3.0",
     "lodash": "*",
     "mysql": "*"
@@ -33,6 +34,6 @@
     "codecov": "^1.0.1",
     "istanbul": "^0.4.4",
     "mocha": "^3.0.2",
-    "open-rest": "*"
+    "open-rest": "^7.0.0-rc1"
   }
 }

@@ -7,6 +7,7 @@ module.exports = function(rest) {
     modify: require('./helper/modify')(rest),
     beforeAdd: require('./helper/before-add')(rest),
     add: require('./helper/add')(rest),
+    batchAdd: require('./helper/batch-add')(rest),
     remove: require('./helper/remove')(rest),
     statistics: require('./helper/statistics')(rest)
   };
