@@ -13,7 +13,7 @@ module.exports = function(rest) {
     return function(req, res, next) {
       var results = _.isArray(req.body) ? req.hooks[hook] : [req.hooks[hook]];
       var ret = _.map(results, function(model) {
-        var json = model.toJSON ? model.toJSON() : model;
+        var json = (model.toJSON instanceof Function) ? model.toJSON() : model;
         if (attachs) {
           _.each(attachs, function(v, k) {
             json[k] = _.get(req, v);
@@ -42,7 +42,7 @@ module.exports = function(rest) {
         req.params = _.extend(params, origParams);
         attr = U.pickParams(req, cols || Model.writableCols, Model)
         if (Model.rawAttributes.creatorId) attr.creatorId = req.user.id;
-        if (Model.rawAttributes.clientIp) attr.clientIp = utils.clientIp(req);
+        if (Model.rawAttributes.clientIp) attr.clientIp = rest.utils.clientIp(req);
 
         /** 构建实例 */
         model = Model.build(attr);

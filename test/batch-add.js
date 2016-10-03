@@ -25,6 +25,17 @@ var validateSuccess = function(model) {
   };
 };
 
+var validateFailure = function(model) {
+  return function() {
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        reject(Error('This is a test error message'));
+      }, 10);
+    });
+  };
+};
+
+
 describe("open-rest-helper-rest-batchAdd", function() {
 
   describe("Argument validate error", function() {
@@ -172,7 +183,7 @@ describe("open-rest-helper-rest-batchAdd", function() {
 
     });
 
-    it("normal cols set, hook set, body isnot array", function(done) {
+    it("normal cols set, hook set, body isnot array, attachs", function(done) {
 
       var add = helper.batchAdd(Model, ['name', 'age'], 'user', {address: 'hooks.address'});
 
@@ -233,15 +244,306 @@ describe("open-rest-helper-rest-batchAdd", function() {
       add(req, res, function(error) {
         try {
           assert.equal(null, error);
-
-          done();
         } catch (e) {
-          done(e);
+          console.error('nextError', e, error);
         }
+        done();
       });
 
     });
 
+    it("normal cols set, hook set, body isnot array, no attachs", function(done) {
+
+      var add = helper.batchAdd(Model, ['name', 'age'], 'user');
+
+      var req = {
+        hooks: {
+          address: '北京市昌平区'
+        },
+        params: {},
+        body: {
+          id: 99,
+          name: 'Redstone Zhao',
+          age: 36
+        }
+      };
+
+      var res = {
+        send: function(statusCode, data) {
+          try {
+            assert.equal(201, statusCode);
+            assert.deepEqual({
+              id: 1,
+              name: 'Redstone Zhao',
+              age: 36
+            }, _.pick(data, ['id', 'name', 'age', 'address']));
+          } catch(e) {
+            console.error('sendError', e, data);
+            done(e);
+          }
+        }
+      };
+
+      add(req, res, function(error) {
+        try {
+          assert.equal(null, error);
+        } catch (e) {
+          console.error('nextError', e, error);
+        }
+        done();
+      });
+
+    });
+
+    it("writableCols, creatorId, clientIp, validate failure", function(done) {
+
+      Model.writableCols = ['name', 'age', 'address'];
+      Model.rawAttributes.creatorId = {};
+      Model.rawAttributes.clientIp = {};
+
+      var add = helper.batchAdd(Model);
+
+      var req = {
+        user: {
+          id: 3
+        },
+        headers: {
+          'x-forwarded-for':  '192.168.199.188'
+        },
+        hooks: {
+          address: '北京市昌平区'
+        },
+        params: {},
+        body: {
+          id: 99,
+          name: 'Redstone Zhao',
+          age: 36
+        }
+      };
+
+      Model.build = function(attrs) {
+        var model = _.extend({}, attrs, {
+          reload: function() {
+            return new Promise(function(resolve, reject) {
+              setTimeout(function() {
+                resolve(model);
+              }, 10);
+            });
+          },
+          validate: validateFailure(model)
+        });
+
+        return model;
+      };
+
+      var res = {};
+
+      add(req, res, function(error) {
+        try {
+          assert.ok(error);
+          assert.ok(error instanceof Error);
+          assert.equal('This is a test error message', error.message);
+        } catch (e) {
+          console.error('nextError', e, error);
+        }
+        done();
+      });
+
+    });
+
+    it("writableCols, creatorId, clientIp, validate success, model.toJSON", function(done) {
+
+      Model.writableCols = ['name', 'age', 'address'];
+      Model.rawAttributes.creatorId = {};
+      Model.rawAttributes.clientIp = {};
+
+      var add = helper.batchAdd(Model);
+
+      var req = {
+        user: {
+          id: 3
+        },
+        headers: {
+          'x-forwarded-for':  '192.168.199.188'
+        },
+        hooks: {
+          address: '北京市昌平区'
+        },
+        params: {},
+        body: {
+          id: 99,
+          name: 'Redstone Zhao',
+          age: 36
+        }
+      };
+
+      Model.build = function(attrs) {
+        var model = _.extend({}, attrs, {
+          reload: function() {
+            return new Promise(function(resolve, reject) {
+              setTimeout(function() {
+                resolve(model);
+              }, 10);
+            });
+          },
+          validate: validateSuccess(model)
+        });
+
+        model.toJSON = function() {
+          return model;
+        };
+
+        return model;
+      };
+
+      var res = {
+        send: function(statusCode, data) {
+          try {
+            assert.equal(201, statusCode);
+            assert.deepEqual({
+              id: 1,
+              name: 'Redstone Zhao',
+              age: 36,
+              clientIp: '192.168.199.188',
+              creatorId: 3
+            }, _.pick(data, ['id', 'name', 'age', 'address', 'clientIp', 'creatorId']));
+          } catch(e) {
+            console.error('sendError', e, data);
+            done(e);
+          }
+        }
+      };
+
+      add(req, res, function(error) {
+        try {
+          assert.equal(null, error);
+        } catch (e) {
+          console.error('nextError', e, error);
+        }
+        done();
+      });
+
+    });
+
+    it("writableCols, creatorId, clientIp, validate success, reload error", function(done) {
+
+      Model.writableCols = ['name', 'age', 'address'];
+      Model.rawAttributes.creatorId = {};
+      Model.rawAttributes.clientIp = {};
+
+      var add = helper.batchAdd(Model);
+
+      var req = {
+        user: {
+          id: 3
+        },
+        headers: {
+          'x-forwarded-for':  '192.168.199.188'
+        },
+        hooks: {
+          address: '北京市昌平区'
+        },
+        params: {},
+        body: {
+          id: 99,
+          name: 'Redstone Zhao',
+          age: 36
+        }
+      };
+
+      Model.build = function(attrs) {
+        var model = _.extend({}, attrs, {
+          reload: function() {
+            return new Promise(function(resolve, reject) {
+              setTimeout(function() {
+                reject(Error('Happen a error when reload'));
+              }, 10);
+            });
+          },
+          validate: validateSuccess(model)
+        });
+
+        return model;
+      };
+
+      var res = {};
+
+      add(req, res, function(error) {
+        try {
+          assert.ok(error);
+          assert.ok(error instanceof Error);
+          assert.equal('Happen a error when reload', error.message);
+        } catch (e) {
+          console.error('nextError', e, error);
+        }
+        done();
+      });
+
+    });
+
+    it("writableCols, creatorId, clientIp, validate success, save error", function(done) {
+
+      Model.writableCols = ['name', 'age', 'address'];
+      Model.rawAttributes.creatorId = {};
+      Model.rawAttributes.clientIp = {};
+
+      var add = helper.batchAdd(Model);
+
+      var req = {
+        user: {
+          id: 3
+        },
+        headers: {
+          'x-forwarded-for':  '192.168.199.188'
+        },
+        hooks: {
+          address: '北京市昌平区'
+        },
+        params: {},
+        body: {
+          id: 99,
+          name: 'Redstone Zhao',
+          age: 36
+        }
+      };
+
+      Model.build = function(attrs) {
+        var model = _.extend({}, attrs, {
+          reload: function() {
+            return new Promise(function(resolve, reject) {
+              setTimeout(function() {
+                resolve(model);
+              }, 10);
+            });
+          },
+          validate: validateSuccess(model)
+        });
+
+        return model;
+      };
+
+      Model.create = function(x) {
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            reject(Error('Happen a error when save'));
+          }, 10);
+        });
+      };
+
+      var res = {};
+
+      add(req, res, function(error) {
+        try {
+          assert.ok(error);
+          assert.ok(error instanceof Error);
+          assert.equal('Happen a error when save', error.message);
+        } catch (e) {
+          console.error('nextError', e, error);
+        }
+        done();
+      });
+
+    });
   });
 
 });
