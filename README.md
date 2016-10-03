@@ -185,6 +185,29 @@ restHelper
   .exec();
 ```
 
+## restHelper.batchAdd
+批量创建资源方法
+
+```js
+// Model 必选, Sequlize 定义的Model，表明数据的原型
+// cols 可选, 允许设置的字段
+// hook 可选, 生成实例的存放位置
+// attachs 可选，要附加输出的数据格式为 key => value, value 是 req 上的路径字符串
+
+restHelper.batchAdd(Model, cols, hook, attachs);
+
+// return
+// function(req, res, next) { ... };
+
+//or 链式调用
+restHelper
+  .batchAdd
+  .Model(User)
+  .cols(['name', 'age', 'gender'])
+  .hook('user')
+  .exec();
+```
+
 ## restHelper.statistics
 标准的资源统计功能方法
 
