@@ -44,7 +44,7 @@ module.exports = function(rest) {
       });
 
       // 根据条件查找资源
-      Model.findOne({where}).then(function(model) {
+      Model.findOne({where: where}).then(function(model) {
         // 资源存在
         if (model) {
           // 且资源曾经被删除
