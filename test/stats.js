@@ -278,6 +278,24 @@ describe('stats', function() {
       assert.deepEqual(expected, stats.filters(Model, params.filters, _dims));
       return done();
     });
+    it("动态维度 onlyCols = true", function(done) {
+      var Model, expected, params, _dims;
+      Model = {
+        rawAttributes: {},
+        stats: {
+          dimensions: {
+            date: '`date2`'
+          }
+        }
+      };
+      params = {filters: 'user==2'};
+      _dims = {
+        user: '`creatorId`'
+      };
+      expected = ['user'];
+      assert.deepEqual(expected, stats.filters(Model, params.filters, _dims, true));
+      return done();
+    });
     it("isnt a string", function(done) {
       var Model, expected, params;
       Model = {
@@ -369,6 +387,7 @@ describe('stats', function() {
         }
       ];
       assert.deepEqual(stats.filters(Model, filters), expected);
+      assert.deepEqual(stats.filters(Model, filters, null, true), ['date', 'networkId']);
       return done();
     });
     it("non-allowd", function(done) {
