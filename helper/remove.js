@@ -12,7 +12,7 @@ var remove = function(hook) {
       // 资源如果有isDelete 字段则修改isDelete 为yes即可
       if (!model.isDelete) return model.destroy();
       model.isDelete = 'yes';
-      return model.save();
+      return model.save({fields: ['isDelete'], validate: false});
     })().then(function() {
       res.send(204);
       next();
