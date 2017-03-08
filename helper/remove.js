@@ -12,6 +12,8 @@ var remove = function(hook) {
       // 资源如果有isDelete 字段则修改isDelete 为yes即可
       if (!model.isDelete) return model.destroy();
       model.isDelete = 'yes';
+      model.deletorId = req.user.id;
+      model.deletedAt = new Date();
       return model.save({fields: ['isDelete'], validate: false});
     })().then(function() {
       res.send(204);

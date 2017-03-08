@@ -65,7 +65,10 @@ describe("open-rest-helper-rest-remove", function() {
       var req = {
         hooks: {
           user: model
-        }
+        },
+        user: {
+          id: 5,
+        },
       };
 
       var res = {
@@ -101,7 +104,10 @@ describe("open-rest-helper-rest-remove", function() {
       var req = {
         hooks: {
           user: model
-        }
+        },
+        user: {
+          id: 35,
+        },
       };
 
       var res = {
