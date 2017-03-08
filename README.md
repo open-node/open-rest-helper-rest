@@ -5,6 +5,9 @@ open-rest 的 helper 插件，用来实现 CRUD 的标准操作
 [![Build status](https://api.travis-ci.org/open-node/open-rest-helper-rest.svg?branch=master)](https://travis-ci.org/open-node/open-rest-helper-rest)
 [![codecov](https://codecov.io/gh/open-node/open-rest-helper-rest/branch/master/graph/badge.svg)](https://codecov.io/gh/open-node/open-rest-helper-rest)
 
+## Node version
+<pre> >= 6 </pre>
+
 # Usage
 
 ```bash
