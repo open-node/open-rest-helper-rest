@@ -1,5 +1,6 @@
 var assert      = require('assert')
   , rest        = require('open-rest')
+  , om          = require('open-rest-with-mysql')(rest)
   , helper      = require('../')(rest);
 
 describe("open-rest-helper-rest-remove", function() {

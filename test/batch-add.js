@@ -1,5 +1,6 @@
 var assert      = require('assert')
   , rest        = require('open-rest')
+  , om          = require('open-rest-with-mysql')(rest)
   , _           = require('lodash')
   , Sequelize   = rest.Sequelize
   , helper      = require('../')(rest);
