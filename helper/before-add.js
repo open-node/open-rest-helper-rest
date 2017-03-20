@@ -32,7 +32,7 @@ module.exports = function(rest) {
       if (Model.rawAttributes.clientIp) attr.clientIp = rest.utils.clientIp(req);
 
       // 如果没有设置唯一属性，或者没有开启回收站
-      if ((!Model.unique) || (!Model.rawAttributes.isDelete)) {
+      if ((!Model.unique) && (!Model.rawAttributes.isDelete)) {
         return _save(Model.build(attr));
       }
 
