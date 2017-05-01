@@ -54,7 +54,7 @@ module.exports = function(rest) {
             model.isDelete = 'no';
           } else {
             // 资源已经存在，重复了
-            return next(rest.errors.ifError(Error('Resource exists.'), Model.unique[0]))
+            return next(rest.errors.ifError(Error('Resource exists.'), Model.unique.join(",")))
           }
         } else {
           // 构建一个全新的资源
