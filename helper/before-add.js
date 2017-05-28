@@ -31,8 +31,8 @@ module.exports = function(rest) {
       // 约定的 clientIp, 等于rest.utils.clientIp(req)
       if (Model.rawAttributes.clientIp) attr.clientIp = rest.utils.clientIp(req);
 
-      // 如果没有设置唯一属性，或者没有开启回收站
-      if ((!Model.unique) || (!Model.rawAttributes.isDelete)) {
+      // 没有 unique 则，直接保存了。不进行回收。
+      if (!Model.unique) {
         return _save(Model.build(attr));
       }
 
@@ -47,14 +47,14 @@ module.exports = function(rest) {
       Model.findOne({where: where}).then(function(model) {
         // 资源存在
         if (model) {
-          // 且资源曾经被删除
-          if (model.isDelete === 'yes') {
+          // 如果设置了唯一属性，并且开启回收站，则可以回收数据 
+          if (Model.rawAttributes.isDelete && model.isDelete === 'yes') {
             _.extend(model, attr);
             // 恢复为正常状态
             model.isDelete = 'no';
           } else {
             // 资源已经存在，重复了
-            return next(rest.errors.ifError(Error('Resource exists.'), Model.unique[0]))
+            return next(rest.errors.ifError(Error('Resource exists.'), Model.unique.join(",")))
           }
         } else {
           // 构建一个全新的资源

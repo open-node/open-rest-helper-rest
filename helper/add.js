@@ -19,15 +19,19 @@ module.exports = function(rest) {
 
     // 这里hook其实是必须的，因为这里把 add 分成两个部分，
     // 为了避免冲突导致，这里引入了随机字符串
-    if (!hook) hook = Model.name + '_' + rest.utils.randStr(10);
+    let randHook = hook?hook:Model.name + '_' + rest.utils.randStr(10);
 
-    var before = beforeAdd(rest)(Model, cols, hook);
-    var detail = detailHelper(rest)(hook, attachs, 201);
+    var before = beforeAdd(rest)(Model, cols, randHook);
+    var detail = detailHelper(rest)(randHook, attachs, 201);
 
     return function(req, res, next) {
       before(req, res, function(error) {
         if (error) return next(error);
-        detail(req, res, next);
+        if (hook) {
+          next();
+        } else {
+          detail(req, res, next);
+        }
       });
     };
 

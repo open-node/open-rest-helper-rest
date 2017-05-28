@@ -14,7 +14,7 @@ var remove = function(hook) {
       model.isDelete = 'yes';
       model.deletorId = req.user.id;
       model.deletedAt = new Date();
-      return model.save({fields: ['isDelete'], validate: false});
+      return model.save({fields: ['isDelete','deletedAt','deletorId'], validate: false});
     })().then(function() {
       res.send(204);
       next();
