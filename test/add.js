@@ -1,40 +1,38 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , _           = require('lodash')
-  , Sequelize   = rest.Sequelize
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+const _ = require('lodash');
 
-var sequelize = new Sequelize();
-var Model = sequelize.define('book', {
+const Sequelize = rest.Sequelize;
+const helper = require('../')(rest);
+
+const sequelize = new Sequelize();
+const Model = sequelize.define('book', {
   id: {
     type: Sequelize.INTEGER.UNSIGNED,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
-  name: Sequelize.STRING(100),
-  age: Sequelize.INTEGER.UNSIGNED
+  name: Sequelize.STRING,
+  age: Sequelize.INTEGER.UNSIGNED,
 });
 
-describe("open-rest-helper-rest-add", function() {
-
-  describe("Argument validate error", function() {
-
-    it("Model argument unset", function(done) {
-      assert.throws(function() {
+describe('open-rest-helper-rest-add', () => {
+  describe('Argument validate error', () => {
+    it('Model argument unset', (done) => {
+      assert.throws(() => {
         helper.add();
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
-      });
+      }, (err) => (
+        err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      ));
       done();
     });
 
-    it("Model argument type error", function(done) {
-      assert.throws(function() {
+    it('Model argument type error', (done) => {
+      assert.throws(() => {
         helper.add({});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
-      });
+      }, (err) => (
+        err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      ));
       done();
     });
 
@@ -56,7 +54,7 @@ describe("open-rest-helper-rest-add", function() {
       done();
     });
 
-    it("cols item non-exists error", function(done) {
+    it('cols item non-exists error', function(done) {
       assert.throws(function() {
         helper.add(Model, ['id', 'price']);
       }, function(err) {
