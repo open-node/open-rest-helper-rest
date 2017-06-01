@@ -91,7 +91,7 @@ describe("open-rest-helper-rest-remove", function() {
         isDelete: 'no',
         save: function(opts) {
           assert.deepEqual(opts, {
-            fields: ['isDelete'],
+            fields: ['isDelete', 'deletorId', 'deletedAt'],
             validate: false,
           });
           return new Promise(function(resolve, reject) {

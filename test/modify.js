@@ -233,7 +233,14 @@ describe("open-rest-helper-rest-modify", function() {
             age: 36,
             changed: function() {
               return ['name'];
-            }
+            },
+            save: function() {
+              return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                  reject(new Error('Has error when save'));
+                }, 10);
+              });
+            },
           }
         }
       };
@@ -251,7 +258,7 @@ describe("open-rest-helper-rest-modify", function() {
 
       modify(req, res, function(error) {
         assert.ok(error instanceof Error);
-        assert.equal("Cannot read property 'hasOwnProperty' of undefined", error.message);
+        assert.equal('Has error when save', error.message);
 
         done();
       });
@@ -260,5 +267,3 @@ describe("open-rest-helper-rest-modify", function() {
   });
 
 });
-
-

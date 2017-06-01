@@ -1,6 +1,6 @@
-var delegate      = require('func-delegate')
-  , U             = require('../lib/utils')
-  , _             = require('lodash');
+const delegate = require('func-delegate');
+const U = require('../lib/utils');
+const _ = require('lodash');
 
 /**
  * 修改某个资源描述的前置方法, 不会sync到数据库
@@ -8,58 +8,56 @@ var delegate      = require('func-delegate')
  * hook 必选, 实例的存放位置
  * cols 可选, 允许修改的字段
  */
-var beforeModify = function(Model, hook, cols) {
-
-  return function(req, res, next) {
-    var model = req.hooks[hook]
-      , attr;
-    cols = cols || Model.editableCols || Model.writableCols;
+const beforeModify = (Model, hook, cols) => (
+  (req, res, next) => {
+    const model = req.hooks[hook];
+    const _cols = cols || Model.editableCols || Model.writableCols;
+    let attr;
     try {
-      attr = U.pickParams(req, cols, Model);
+      attr = U.pickParams(req, _cols, Model);
     } catch (e) {
       return next(e);
     }
-    delete attr.id
-    _.each(attr, function(v, k) {
+    delete attr.id;
+    _.each(attr, (v, k) => {
       if (model[k] === v) return;
       model[k] = v;
     });
-    next();
-  };
+    return next();
+  }
+);
 
-};
+module.exports = (rest) => {
+  const Sequelize = rest.Sequelize;
 
-module.exports = function(rest) {
-  var Sequelize = rest.Sequelize;
-
-  var schemas = [{
+  const schemas = [{
     name: 'Model',
     type: Sequelize.Model,
-    message: 'Model must be a class of Sequelize defined'
+    message: 'Model must be a class of Sequelize defined',
   }, {
     name: 'hook',
     type: String,
     allowNull: false,
-    message: 'Will modify instance hook on req.hooks[hook], so `hook` must be a string'
+    message: 'Will modify instance hook on req.hooks[hook], so `hook` must be a string',
   }, {
     name: 'cols',
     type: Array,
     allowNull: true,
     validate: {
-      check: function(keys, schema, args) {
-        var Model = args[0];
-        _.each(keys, function(v) {
+      check(keys, schema, args) {
+        const Model = args[0];
+        _.each(keys, (v) => {
           if (!_.isString(v)) {
             throw Error('Every item in cols must be a string.');
           }
           if (!Model.rawAttributes[v]) {
-            throw Error('Attr non-exists: ' + v);
+            throw Error(`Attr non-exists: ${v}`);
           }
         });
         return true;
-      }
+      },
     },
-    message: "Allow modify attrs's name array"
+    message: 'Allow modify attrs\'s name array',
   }];
 
   return delegate(beforeModify, schemas);
