@@ -97,7 +97,7 @@ describe("open-rest-helper-rest-statistics", function() {
         }
       };
       Model.findAll = function(options) {
-        assert.deepEqual({
+        const expect = {
           attributes: [
             "Date(`createdAt`) AS `date`",
             "`creatorId` AS `user`",
@@ -127,7 +127,8 @@ describe("open-rest-helper-rest-statistics", function() {
             attributes: []
           }],
           raw: true
-        }, options);
+        };
+        assert.deepEqual(expect, options);
         return new Promise(function(resolve, reject) {
           setTimeout(function() {
             resolve([{
