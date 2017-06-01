@@ -12,12 +12,7 @@ const beforeModify = (Model, hook, cols) => (
   (req, res, next) => {
     const model = req.hooks[hook];
     const _cols = cols || Model.editableCols || Model.writableCols;
-    let attr;
-    try {
-      attr = U.pickParams(req, _cols, Model);
-    } catch (e) {
-      return next(e);
-    }
+    const attr = U.pickParams(req, _cols, Model);
     delete attr.id;
     _.each(attr, (v, k) => {
       if (model[k] === v) return;
