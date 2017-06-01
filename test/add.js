@@ -1,7 +1,9 @@
 const assert = require('assert');
 const rest = require('open-rest');
 const _ = require('lodash');
+const om = require('open-rest-with-mysql');
 
+om(rest);
 const Sequelize = rest.Sequelize;
 const helper = require('../')(rest);
 
