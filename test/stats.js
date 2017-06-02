@@ -1,124 +1,112 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , Sequelize   = rest.Sequelize
-  , stats       = require('../lib/stats')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+require('open-rest-with-mysql')(rest);
 
-var sequelize = new Sequelize();
+const Sequelize = rest.Sequelize;
+const stats = require('../lib/stats')(rest);
 
-describe('stats', function() {
-  describe('metrics', function() {
-    it("动态的指标配置", function(done) {
-      var Model, expected, params, _mets;
-      Model = {
+const sequelize = new Sequelize();
+
+describe('stats', () => {
+  describe('metrics', () => {
+    it('动态的指标配置', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
+            date: '`date2`',
           },
-          metrics: {}
-        }
+          metrics: {},
+        },
       };
-      params = {metrics: 'count,total'};
-      _mets = {
+      const params = { metrics: 'count,total' };
+      const _mets = {
         count: 'COUNT(*)',
-        total: 'SUM(`price`)'
+        total: 'SUM(`price`)',
       };
 
-      expected = [
-        "COUNT(*) AS `count`",
-        "SUM(`price`) AS `total`"
+      const expected = [
+        'COUNT(*) AS `count`',
+        'SUM(`price`) AS `total`',
       ];
 
       assert.deepEqual(expected, stats.metrics(Model, params, _mets));
       return done();
     });
-    it("isnt string", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('isnt string', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {metrics: []};
-      assert.throws(function() {
-        return stats.metrics(Model, params);
-      }, Error);
+      const params = { metrics: [] };
+      assert.throws(() => stats.metrics(Model, params), Error);
       return done();
     });
-    it("no", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('no', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {};
-      expected = void 0;
-      assert.throws(function() {
-        return stats.metrics(Model, params);
-      }, Error);
+      const params = {};
+      assert.throws(() => stats.metrics(Model, params), Error);
       return done();
     });
-    it("single", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('single', (done) => {
+      const Model = {
         stats: {
           metrics: {
             count: 'count(*)',
-            total: 'SUM(`num`)'
-          }
-        }
+            total: 'SUM(`num`)',
+          },
+        },
       };
-      params = {
-        metrics: 'total'
+      const params = {
+        metrics: 'total',
       };
-      expected = ["SUM(`num`) AS `total`"];
+      const expected = ['SUM(`num`) AS `total`'];
       assert.deepEqual(stats.metrics(Model, params), expected);
       return done();
     });
-    it("multi", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('multi', (done) => {
+      const Model = {
         stats: {
           metrics: {
             count: 'count(*)',
-            total: 'SUM(`num`)'
-          }
-        }
+            total: 'SUM(`num`)',
+          },
+        },
       };
-      params = {
-        metrics: 'count,total'
+      const params = {
+        metrics: 'count,total',
       };
-      expected = ["count(*) AS `count`", "SUM(`num`) AS `total`"];
+      const expected = ['count(*) AS `count`', 'SUM(`num`) AS `total`'];
       assert.deepEqual(stats.metrics(Model, params), expected);
       return done();
     });
-    return it("non-allowd", function(done) {
-      var Model, params;
-      Model = {
+    return it('non-allowd', (done) => {
+      const Model = {
         stats: {
           metrics: {
             count: 'count(*)',
-            total: 'SUM(`num`)'
-          }
-        }
+            total: 'SUM(`num`)',
+          },
+        },
       };
-      params = {
-        metrics: 'avg'
+      const params = {
+        metrics: 'avg',
       };
-      assert.throws(function() {
-        return stats.metrics(Model, params);
-      }, Error);
+      assert.throws(() => stats.metrics(Model, params), Error);
       return done();
     });
   });
 
-  describe('group', function() {
-    it("dims unset", function(done) {
+  describe('group', () => {
+    it('dims unset', (done) => {
       assert.equal(undefined, stats.group());
       assert.equal(undefined, stats.group(0));
       assert.equal(undefined, stats.group(''));
@@ -128,704 +116,664 @@ describe('stats', function() {
       done();
     });
 
-    it("dims isnt an array", function(done) {
+    it('dims isnt an array', (done) => {
       assert.equal(undefined, stats.group({}));
-      assert.equal(undefined, stats.group(function() {}));
+      assert.equal(undefined, stats.group(() => {}));
       assert.equal(undefined, stats.group(200));
       assert.equal(undefined, stats.group('hello'));
 
       done();
     });
 
-    it("dims is an empty array", function(done) {
+    it('dims is an empty array', (done) => {
       assert.equal(undefined, stats.group([]));
 
       done();
     });
 
-    it("dims is an array", function(done) {
-      var dims = [
-        "`creatorId` AS `user`",
-        "`createdAt` AS `date`"
-      ]
+    it('dims is an array', (done) => {
+      const dims = [
+        '`creatorId` AS `user`',
+        '`createdAt` AS `date`',
+      ];
       assert.deepEqual(['`user`', '`date`'], stats.group(dims));
 
       done();
     });
   });
 
-  describe('dimension', function() {
-    it("动态维度处理", function(done) {
-      var Model, expected, params, _dims;
-      Model = {
+  describe('dimension', () => {
+    it('动态维度处理', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      _dims = {
-        user: '`creatorId`'
+      const _dims = {
+        user: '`creatorId`',
       };
-      params = {dimensions: 'user'};
-      expected = ["`creatorId` AS `user`"];
+      const params = { dimensions: 'user' };
+      const expected = ['`creatorId` AS `user`'];
       assert.deepEqual(stats.dimensions(Model, params, _dims), expected);
       done();
     });
-    it("isnt string", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('isnt string', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {dimensions: []};
-      assert.throws(function() {
+      const params = { dimensions: [] };
+      assert.throws(() => {
         stats.dimensions(Model, params);
-      }, function(err) {
-        return err instanceof Error && err.message === 'Dimensions must be a string';
-      });
+      }, (err) => err instanceof Error && err.message === 'Dimensions must be a string');
       done();
     });
-    it("no", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('no', (done) => {
+      const Model = {
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {};
-      expected = void 0;
+      const params = {};
+      const expected = undefined;
       assert.equal(stats.dimensions(Model, params), expected);
       return done();
     });
-    it("single", function(done) {
-      var Model, expected, params;
-      Model = {
-        stats: {
-          dimensions: {
-            date: '`date2`'
-          }
-        }
-      };
-      params = {
-        dimensions: 'date'
-      };
-      expected = ["`date2` AS `date`"];
-      assert.deepEqual(stats.dimensions(Model, params), expected);
-      return done();
-    });
-    it("multi", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('single', (done) => {
+      const Model = {
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+          },
+        },
       };
-      params = {
-        dimensions: 'date,network'
+      const params = {
+        dimensions: 'date',
       };
-      expected = ["`date2` AS `date`", "3 + 2 AS `network`"];
+      const expected = ['`date2` AS `date`'];
       assert.deepEqual(stats.dimensions(Model, params), expected);
       return done();
     });
-    return it("non-allowd", function(done) {
-      var Model, params;
-      Model = {
+    it('multi', (done) => {
+      const Model = {
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+            network: '3 + 2',
+          },
+        },
       };
-      params = {
-        dimensions: 'date,network,name'
+      const params = {
+        dimensions: 'date,network',
       };
-      assert.throws(function() {
-        return stats.dimensions(Model, params);
-      }, Error);
+      const expected = ['`date2` AS `date`', '3 + 2 AS `network`'];
+      assert.deepEqual(stats.dimensions(Model, params), expected);
+      return done();
+    });
+    return it('non-allowd', (done) => {
+      const Model = {
+        stats: {
+          dimensions: {
+            date: '`date2`',
+            network: '3 + 2',
+          },
+        },
+      };
+      const params = {
+        dimensions: 'date,network,name',
+      };
+      assert.throws(() => stats.dimensions(Model, params), Error);
       return done();
     });
   });
 
-  describe('filters', function() {
-    it("动态维度", function(done) {
-      var Model, expected, params, _dims;
-      Model = {
+  describe('filters', () => {
+    it('动态维度', (done) => {
+      const Model = {
         rawAttributes: {},
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {filters: 'user==2'};
-      _dims = {
-        user: '`creatorId`'
+      const params = { filters: 'user==2' };
+      const _dims = {
+        user: '`creatorId`',
       };
-      expected = [
+      const expected = [
         {
-          $or: [["`creatorId`=?", ['2']]]
-        }
+          $or: [['`creatorId`=?', ['2']]],
+        },
       ];
       assert.deepEqual(expected, stats.filters(Model, params.filters, _dims));
       return done();
     });
-    it("动态维度 onlyCols = true", function(done) {
-      var Model, expected, params, _dims;
-      Model = {
+    it('动态维度 onlyCols = true', (done) => {
+      const Model = {
         rawAttributes: {},
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      params = {filters: 'user==2'};
-      _dims = {
-        user: '`creatorId`'
+      const params = { filters: 'user==2' };
+      const _dims = {
+        user: '`creatorId`',
       };
-      expected = ['user'];
+      const expected = ['user'];
       assert.deepEqual(expected, stats.filters(Model, params.filters, _dims, true));
       return done();
     });
-    it("isnt a string", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('isnt a string', (done) => {
+      const Model = {
         rawAttributes: {},
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
-      };
-      params = {filters: []};
-      assert.throws(function() {
-        stats.filters(Model, params.filters);
-      }, function(err) {
-        return err instanceof Error && err.message == 'Filters must be a string';
-      });
-      return done();
-    });
-    it("no", function(done) {
-      var Model, expected, params;
-      Model = {
-        rawAttributes: {},
-        stats: {
-          dimensions: {
-            date: '`date2`'
-          }
-        }
-      };
-      params = {};
-      expected = [];
-      assert.deepEqual(stats.filters(Model, params.filters), expected);
-      return done();
-    });
-    it("include isDelete column", function(done) {
-      var Model, expected, params;
-      Model = {
-        rawAttributes: {
-          isDelete: {}
+            date: '`date2`',
+          },
         },
-        stats: {
-          dimensions: {
-            date: '`date2`'
-          }
-        }
       };
-      params = {};
-      expected = [];
-      assert.deepEqual(stats.filters(Model, params.filters), expected);
+      const params = { filters: [] };
+      assert.throws(() => {
+        stats.filters(Model, params.filters);
+      }, (err) => err instanceof Error && err.message === 'Filters must be a string');
       return done();
     });
-    it("single", function(done) {
-      var Model, expected, filters;
-      Model = {
+    it('no', (done) => {
+      const Model = {
         rawAttributes: {},
         stats: {
           dimensions: {
-            date: '`date2`'
-          }
-        }
+            date: '`date2`',
+          },
+        },
       };
-      filters = 'date==2014';
-      expected = [
-        {
-          $or: [["`date2`=?", ['2014']]]
-        }
-      ];
-      assert.deepEqual(stats.filters(Model, filters), expected);
+      const params = {};
+      const expected = [];
+      assert.deepEqual(stats.filters(Model, params.filters), expected);
       return done();
     });
-    it("multi", function(done) {
-      var Model, expected, filters;
-      Model = {
+    it('include isDelete column', (done) => {
+      const Model = {
         rawAttributes: {
-          networkId: {}
+          isDelete: {},
         },
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+          },
+        },
       };
-      filters = 'date==2014;networkId==11';
-      expected = [
+      const params = {};
+      const expected = [];
+      assert.deepEqual(stats.filters(Model, params.filters), expected);
+      return done();
+    });
+    it('single', (done) => {
+      const Model = {
+        rawAttributes: {},
+        stats: {
+          dimensions: {
+            date: '`date2`',
+          },
+        },
+      };
+      const filters = 'date==2014';
+      const expected = [
         {
-          $or: [["`date2`=?", ['2014']]]
+          $or: [['`date2`=?', ['2014']]],
+        },
+      ];
+      assert.deepEqual(stats.filters(Model, filters), expected);
+      return done();
+    });
+    it('multi', (done) => {
+      const Model = {
+        rawAttributes: {
+          networkId: {},
+        },
+        stats: {
+          dimensions: {
+            date: '`date2`',
+            network: '3 + 2',
+          },
+        },
+      };
+      const filters = 'date==2014;networkId==11';
+      const expected = [
+        {
+          $or: [['`date2`=?', ['2014']]],
         }, {
-          $or: [["`networkId`=?", ['11']]]
-        }
+          $or: [['`networkId`=?', ['11']]],
+        },
       ];
       assert.deepEqual(stats.filters(Model, filters), expected);
       assert.deepEqual(stats.filters(Model, filters, null, true), ['date', 'networkId']);
       return done();
     });
-    it("non-allowd", function(done) {
-      var Model, filters;
-      Model = {
+    it('non-allowd', (done) => {
+      const Model = {
         rawAttributes: {
-          networkId: {}
+          networkId: {},
         },
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+            network: '3 + 2',
+          },
+        },
       };
-      filters = 'date==2014;networkId==11;name=niubi';
-      assert.throws(function() {
-        return stats.filters(Model, filters);
-      }, Error);
+      const filters = 'date==2014;networkId==11;name=niubi';
+      assert.throws(() => stats.filters(Model, filters), Error);
       return done();
     });
-    it("need escape", function(done) {
-      var Model, expected, filters;
-      Model = {
+    it('need escape', (done) => {
+      const Model = {
         rawAttributes: {
-          networkId: {}
+          networkId: {},
         },
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+            network: '3 + 2',
+          },
+        },
       };
-      filters = "date==2014';networkId==11";
-      expected = [
+      const filters = "date==2014';networkId==11";
+      const expected = [
         {
-          $or: [["`date2`=?", ["2014'"]]]
+          $or: [['`date2`=?', ["2014'"]]],
         }, {
-          $or: [["`networkId`=?", ['11']]]
-        }
+          $or: [['`networkId`=?', ['11']]],
+        },
       ];
       assert.deepEqual(stats.filters(Model, filters), expected);
       return done();
     });
-    return it("no simple", function(done) {
-      var Model, expected, filters;
-      Model = {
+    return it('no simple', (done) => {
+      const Model = {
         rawAttributes: {
-          networkId: {}
+          networkId: {},
         },
         stats: {
           dimensions: {
             date: '`date2`',
-            network: '3 + 2'
-          }
-        }
+            network: '3 + 2',
+          },
+        },
       };
-      filters = "date==2014,date==2015;networkId==11,networkId==23";
-      expected = [
+      const filters = 'date==2014,date==2015;networkId==11,networkId==23';
+      const expected = [
         {
-          $or: [["`date2`=?", ["2014"]], ["`date2`=?", ["2015"]]]
+          $or: [['`date2`=?', ['2014']], ['`date2`=?', ['2015']]],
         }, {
-          $or: [["`networkId`=?", ['11']], ["`networkId`=?", ['23']]]
-        }
+          $or: [['`networkId`=?', ['11']], ['`networkId`=?', ['23']]],
+        },
       ];
       assert.deepEqual(stats.filters(Model, filters), expected);
       return done();
     });
   });
 
-  describe('sort', function() {
-    it("no set", function(done) {
-      var expected, params;
-      params = {
-        dimensions: 'date,network,creator',
-        metrics: 'count,avg,total'
-      };
-      expected = void 0;
-      assert.equal(stats.sort({}, params), expected);
-      return done();
-    });
-    it("desc", function(done) {
-      var expected, params;
-      params = {
+  describe('sort', () => {
+    it('no set', (done) => {
+      const params = {
         dimensions: 'date,network,creator',
         metrics: 'count,avg,total',
-        sort: '-count'
       };
-      expected = "count DESC";
+      const expected = undefined;
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
-    it("asc", function(done) {
-      var expected, params;
-      params = {
+    it('desc', (done) => {
+      const params = {
         dimensions: 'date,network,creator',
         metrics: 'count,avg,total',
-        sort: 'count'
+        sort: '-count',
       };
-      expected = "count ASC";
+      const expected = 'count DESC';
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
-    it("params.dimensions isnt a string", function(done) {
-      var expected, params;
-      params = {
+    it('asc', (done) => {
+      const params = {
+        dimensions: 'date,network,creator',
+        metrics: 'count,avg,total',
+        sort: 'count',
+      };
+      const expected = 'count ASC';
+      assert.equal(stats.sort({}, params), expected);
+      return done();
+    });
+    it('params.dimensions isnt a string', (done) => {
+      const params = {
         dimensions: ['date,network,creator'],
         metrics: 'count,avg,total',
-        sort: 'count'
+        sort: 'count',
       };
-      expected = "count ASC";
+      const expected = 'count ASC';
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
-    it("sort dont allowd", function(done) {
-      var expected, params;
-      params = {
+    it('sort dont allowd', (done) => {
+      const params = {
         dimensions: ['date,network,creator'],
-        sort: 'count'
+        sort: 'count',
       };
-      expected = void 0;
+      const expected = undefined;
       assert.equal(stats.sort({}, params), expected);
       return done();
     });
   });
 
-  describe('pageParams', function() {
-    it("default no set", function(done) {
-      var Model, expected, params;
-      Model = {
-        stats: {}
+  describe('pageParams', () => {
+    it('default no set', (done) => {
+      const Model = {
+        stats: {},
       };
-      params = {};
-      expected = {
+      const params = {};
+      const expected = {
         offset: 0,
-        limit: 10
+        limit: 10,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
-    it("noraml page", function(done) {
-      var Model, expected, params;
-      Model = {
-        stats: {}
+    it('noraml page', (done) => {
+      const Model = {
+        stats: {},
       };
-      params = {
+      const params = {
         startIndex: 20,
-        maxResults: 15
+        maxResults: 15,
       };
-      expected = {
+      const expected = {
         offset: 20,
-        limit: 15
+        limit: 15,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
-    it("set pagination default", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('set pagination default', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
+            maxStartIndex: 50000,
+          },
+        },
       };
-      params = {};
-      expected = {
+      const params = {};
+      const expected = {
         offset: 0,
-        limit: 20
+        limit: 20,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
-    it("set pagination default page", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('set pagination default page', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
+            maxStartIndex: 50000,
+          },
+        },
       };
-      params = {
-        startIndex: 50
+      const params = {
+        startIndex: 50,
       };
-      expected = {
+      const expected = {
         offset: 50,
-        limit: 20
+        limit: 20,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
-    it("set pagination limit startIndex", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('set pagination limit startIndex', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
+            maxStartIndex: 50000,
+          },
+        },
       };
-      params = {
-        startIndex: 5000000
-      };
-      expected = {
-        offset: 50000,
-        limit: 20
-      };
-      assert.deepEqual(stats.pageParams(Model, params), expected);
-      return done();
-    });
-    it("set pagination limit maxResults", function(done) {
-      var Model, expected, params;
-      Model = {
-        stats: {
-          pagination: {
-            maxResults: 20,
-            maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
-      };
-      params = {
+      const params = {
         startIndex: 5000000,
-        maxResults: 10000
       };
-      expected = {
+      const expected = {
         offset: 50000,
-        limit: 2000
+        limit: 20,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
-    return it("set pagination lt 0", function(done) {
-      var Model, expected, params;
-      Model = {
+    it('set pagination limit maxResults', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
+            maxStartIndex: 50000,
+          },
+        },
       };
-      params = {
+      const params = {
+        startIndex: 5000000,
+        maxResults: 10000,
+      };
+      const expected = {
+        offset: 50000,
+        limit: 2000,
+      };
+      assert.deepEqual(stats.pageParams(Model, params), expected);
+      return done();
+    });
+    it('set pagination lt 0', (done) => {
+      const Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000,
+          },
+        },
+      };
+      const params = {
         startIndex: -1,
-        maxResults: -10
+        maxResults: -10,
       };
-      expected = {
+      const expected = {
         offset: 0,
-        limit: 0
+        limit: 0,
       };
       assert.deepEqual(stats.pageParams(Model, params), expected);
       return done();
     });
   });
 
-  describe('statsCount', function() {
-    it("dims unset", function(done) {
-      var Model = {
+  describe('statsCount', () => {
+    it('dims unset', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
-      };
-      stats.statsCount(Model, {}, null, function(error, count) {
-        assert.equal(null, error);
-        assert.equal(1, count);
-        done();
-      });
-
-    });
-
-    it("dims empty array", function(done) {
-      var Model = {
-        stats: {
-          pagination: {
-            maxResults: 20,
-            maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
-        }
-      };
-      stats.statsCount(Model, {}, [], function(error, count) {
-        assert.equal(null, error);
-        assert.equal(1, count);
-
-        done();
-      });
-    });
-
-    it("noraml", function(done) {
-      var Model = {
-        stats: {
-          pagination: {
-            maxResults: 20,
-            maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
+            maxStartIndex: 50000,
+          },
         },
-        findOne: function(options) {
+      };
+      stats.statsCount(Model, {}, null, (error, count) => {
+        assert.equal(null, error);
+        assert.equal(1, count);
+        done();
+      });
+    });
+
+    it('dims empty array', (done) => {
+      const Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000,
+          },
+        },
+      };
+      stats.statsCount(Model, {}, [], (error, count) => {
+        assert.equal(null, error);
+        assert.equal(1, count);
+
+        done();
+      });
+    });
+
+    it('noraml', (done) => {
+      const Model = {
+        stats: {
+          pagination: {
+            maxResults: 20,
+            maxResultsLimit: 2000,
+            maxStartIndex: 50000,
+          },
+        },
+        findOne(options) {
           assert.deepEqual({
             raw: true,
             include: [{
               model: Model,
               as: 'creator',
-              required: true
+              required: true,
             }],
             attributes: [
-              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`'
-            ]
+              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`',
+            ],
           }, options);
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-              resolve({count: 20});
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ count: 20 });
             }, 50);
           });
-        }
+        },
       };
-      var opt = {
+      const opt = {
         include: [{
           model: Model,
           as: 'creator',
-          required: true
-        }]
+          required: true,
+        }],
       };
-      var dims = [
-        "`creatorId` AS `user`",
-        "DATE(`createdAt`) AS `date`"
+      const dims = [
+        '`creatorId` AS `user`',
+        'DATE(`createdAt`) AS `date`',
       ];
-      stats.statsCount(Model, opt, dims, function(error, count) {
+      stats.statsCount(Model, opt, dims, (error, count) => {
         assert.equal(null, error);
         assert.equal(20, count);
         done();
       });
-
     });
 
-    it("noraml opt.include unset", function(done) {
-      var Model = {
+    it('noraml opt.include unset', (done) => {
+      const Model = {
         stats: {
           pagination: {
             maxResults: 20,
             maxResultsLimit: 2000,
-            maxStartIndex: 50000
-          }
+            maxStartIndex: 50000,
+          },
         },
-        findOne: function(options) {
+        findOne(options) {
           assert.deepEqual({
             raw: true,
             attributes: [
-              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`'
-            ]
+              'COUNT(DISTINCT `creatorId`, DATE(`createdAt`)) AS `count`',
+            ],
           }, options);
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-              resolve({count: 20});
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ count: 20 });
             }, 50);
           });
-        }
+        },
       };
-      var opt = {};
-      var dims = [
-        "`creatorId` AS `user`",
-        "DATE(`createdAt`) AS `date`"
+      const opt = {};
+      const dims = [
+        '`creatorId` AS `user`',
+        'DATE(`createdAt`) AS `date`',
       ];
-      stats.statsCount(Model, opt, dims, function(error, count) {
+      stats.statsCount(Model, opt, dims, (error, count) => {
         assert.equal(null, error);
         assert.equal(20, count);
         done();
       });
-
     });
   });
 
-  describe('statistics', function() {
-
-    it("normal", function(done) {
-      var Model = sequelize.define('book', {
+  describe('statistics', () => {
+    it('normal', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           offset: 0,
           limit: 20,
@@ -833,212 +781,212 @@ describe('stats', function() {
             model: Model,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+
+      Model.findOne = (options) => {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           raw: true,
           include: [{
             model: Model,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var params = {
+      const params = {
         dimensions: 'date,user',
         metrics: 'count',
         id_gte: 200,
-        includes: 'creator'
+        includes: 'creator',
       };
-      var where = "`isDelete`='no'";
-      var conf = {
+      const where = "`isDelete`='no'";
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      stats.statistics(Model, params, where, conf, function(error, result) {
+      stats.statistics(Model, params, where, conf, (error, result) => {
         assert.equal(null, error);
         assert.equal(20, result[1]);
         assert.deepEqual([{
           date: '2016-04-15',
           user: '赵思源',
-          count: 100000000
+          count: 100000000,
         }, {
           date: '2016-04-16',
           user: '赵思鸣',
-          count: 100000000
+          count: 100000000,
         }], result[0]);
         done();
       });
-
     });
 
-    it("no listOpts.where/include, where is null", function(done) {
-      var Model = sequelize.define('book', {
+    it('no listOpts.where/include, where is null', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           offset: 0,
           limit: 20,
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+      Model.findOne = (options) => {
         assert.deepEqual({
           raw: true,
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var params = {
+      const params = {
         dimensions: 'date,user',
-        metrics: 'count'
+        metrics: 'count',
       };
-      var conf = {
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      stats.statistics(Model, params, null, conf, function(error, result) {
+      stats.statistics(Model, params, null, conf, (error, result) => {
         assert.equal(null, error);
         assert.equal(20, result[1]);
         assert.deepEqual([{
           date: '2016-04-15',
           user: '赵思源',
-          count: 100000000
+          count: 100000000,
         }, {
           date: '2016-04-16',
           user: '赵思鸣',
-          count: 100000000
+          count: 100000000,
         }], result[0]);
         done();
       });
     });
 
-    it("no where, no dimensions", function(done) {
-      var Model = sequelize.define('book', {
+    it('no where, no dimensions', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "COUNT(*) AS `count`"
+            'COUNT(*) AS `count`',
           ],
           offset: 0,
           limit: 20,
@@ -1047,207 +995,208 @@ describe('stats', function() {
               [
                 {
                   $or: [
-                    ["Date(`createdAt`)=?", ["2016"]]
-                  ]
-                }
-              ]
-            ]
+                    ['Date(`createdAt`)=?', ['2016']],
+                  ],
+                },
+              ],
+            ],
           },
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
-              count: 2
+              count: 2,
             }]);
           }, 50);
         });
       };
-      var params = {
+      const params = {
         metrics: 'count',
-        filters: 'date==2016'
+        filters: 'date==2016',
       };
-      var where = null;
-      var conf = {
+      const where = null;
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      stats.statistics(Model, params, where, conf, function(error, result) {
+      stats.statistics(Model, params, where, conf, (error, result) => {
         assert.equal(null, error);
         assert.equal(1, result[1]);
         assert.deepEqual([{
-          count: 2
+          count: 2,
         }], result[0]);
         done();
       });
     });
 
-    it("no listOpts.where/include, where isnt a string", function(done) {
-      var Model = sequelize.define('book', {
+    it('no listOpts.where/include, where isnt a string', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           where: {
             $and: [
-              {id: {$eq: 200}}
-            ]
+              { id: { $eq: 200 } },
+            ],
           },
           offset: 0,
           limit: 20,
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+
+      Model.findOne = (options) => {
         assert.deepEqual({
           raw: true,
           where: {
             $and: [
-              {id: {$eq: 200}}
-            ]
+              { id: { $eq: 200 } },
+            ],
           },
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var params = {
+      const params = {
         dimensions: 'date,user',
-        metrics: 'count'
+        metrics: 'count',
       };
-      var conf = {
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      var where = {id: {$eq: 200}};
-      stats.statistics(Model, params, where, conf, function(error, result) {
+      const where = { id: { $eq: 200 } };
+      stats.statistics(Model, params, where, conf, (error, result) => {
         assert.equal(null, error);
         assert.equal(20, result[1]);
         assert.deepEqual([{
           date: '2016-04-15',
           user: '赵思源',
-          count: 100000000
+          count: 100000000,
         }, {
           date: '2016-04-16',
           user: '赵思鸣',
-          count: 100000000
+          count: 100000000,
         }], result[0]);
         done();
       });
     });
 
-    it("statsCount error", function(done) {
-      var Model = sequelize.define('book', {
+    it('statsCount error', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findOne = function(options) {
+      Model.findOne = (options) => {
         assert.deepEqual({
           raw: true,
           where: {
             $and: [
-              {id: {$eq: 200}}
-            ]
+              { id: { $eq: 200 } },
+            ],
           },
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(Error('Hello world'));
           }, 50);
         });
       };
-      var params = {
+      const params = {
         dimensions: 'date,user',
-        metrics: 'count'
+        metrics: 'count',
       };
-      var conf = {
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      var where = {id: {$eq: 200}};
-      stats.statistics(Model, params, where, conf, function(error, result) {
+      const where = { id: { $eq: 200 } };
+      stats.statistics(Model, params, where, conf, (error, result) => {
         assert.ok(error instanceof Error);
         assert.equal('Hello world', error.message);
         assert.equal(null, result);
@@ -1255,71 +1204,71 @@ describe('stats', function() {
       });
     });
 
-    it("statistics throw expection", function(done) {
-      var Model = sequelize.define('book', {
+    it('statistics throw expection', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
       Model.includes = {
         creator: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
       Model.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findOne = function(options) {
+      Model.findOne = (options) => {
         assert.deepEqual({
           raw: true,
           where: {
             $and: [
-              {id: {$eq: 200}}
-            ]
+              { id: { $eq: 200 } },
+            ],
           },
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(Error('Hello world'));
           }, 50);
         });
       };
-      var params = {
+      const params = {
         dimensions: ['date', 'user'],
-        metrics: 'count'
+        metrics: 'count',
       };
-      var conf = {
+      const conf = {
         dimensions: {
-          date: "Date(`createdAt`)"
-        }
+          date: 'Date(`createdAt`)',
+        },
       };
-      var where = {id: {$eq: 200}};
-      var logger = rest.utils.logger;
+      const where = { id: { $eq: 200 } };
+      const logger = rest.utils.logger;
       rest.utils.logger = {
-        error: function(error, stack) {
+        error(error) {
           assert.ok(error instanceof Error);
           assert.equal('Dimensions must be a string', error.message);
-        }
+        },
       };
-      stats.statistics(Model, params, where, conf, function(error, result) {
+      stats.statistics(Model, params, where, conf, (error, result) => {
         assert.ok(error instanceof Error);
         assert.equal('Dimensions must be a string', error.message);
         assert.equal(null, result);
@@ -1327,6 +1276,5 @@ describe('stats', function() {
         done();
       });
     });
-
   });
 });
