@@ -1,169 +1,158 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+require('open-rest-with-mysql')(rest);
+const helper = require('../')(rest);
 
-describe("open-rest-helper-rest-save", function() {
-
-  describe("Argument validate error", function() {
-
-    it("hook argument type error", function(done) {
-      assert.throws(function() {
+describe('open-rest-helper-rest-save', () => {
+  describe('Argument validate error', () => {
+    it('hook argument type error', (done) => {
+      assert.throws(() => {
         helper.save({});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Will modify instance hook on req.hooks[hook], so `hook` must be a string'
+      }, (err) => {
+        const msg = 'Will modify instance hook on req.hooks[hook], so `hook` must be a string';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
-
   });
 
-  describe("All aguments validate passed", function() {
+  describe('All aguments validate passed', () => {
+    it('normal changed', (done) => {
+      const save = helper.save('user');
 
-    it("normal changed", function(done) {
-
-      var save = helper.save('user');
-
-      var req = {
+      const req = {
         hooks: {
           user: {
             id: 1,
             name: 'Redstone Zhao',
             age: 36,
-            changed: function() {
+            changed() {
               return ['name'];
             },
-            save: function(option) {
+            save(option) {
               assert.deepEqual({
-                fields: ['name']
+                fields: ['name'],
               }, option);
-              return new Promise(function(resolve, reject) {
-                setTimeout(function() {
+              return new Promise((resolve) => {
+                setTimeout(() => {
                   resolve({
                     id: 1,
                     name: 'Redstone Zhao',
-                    age: 36
+                    age: 36,
                   });
                 }, 20);
               });
-            }
-          }
+            },
+          },
         },
         params: {
           id: 99,
-          name: 'Redstone Zhao'
-        }
+          name: 'Redstone Zhao',
+        },
       };
 
-      var res = {
-        send: function(data) {
+      const res = {
+        send(data) {
           assert.deepEqual({
             id: 1,
             name: 'Redstone Zhao',
-            age: 36
+            age: 36,
           }, data);
-        }
+        },
       };
 
-      save(req, res, function(error) {
+      save(req, res, (error) => {
         assert.equal(null, error);
 
         done();
       });
-
     });
 
-    it("normal unchanged", function(done) {
+    it('normal unchanged', (done) => {
+      const save = helper.save('user');
 
-      var save = helper.save('user');
-
-      var req = {
+      const req = {
         hooks: {
           user: {
             id: 1,
             name: 'Redstone Zhao',
             age: 36,
-            changed: function() {
+            changed() {
               return false;
-            }
-          }
+            },
+          },
         },
         params: {
           id: 99,
-          name: 'Redstone Zhao'
-        }
+          name: 'Redstone Zhao',
+        },
       };
 
-      var res = {
-        send: function(data) {
+      const res = {
+        send(data) {
           assert.equal(req.hooks.user, data);
           assert.equal(true, req._resourceNotChanged);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Resource-Status', key);
           assert.equal('Unchanged', value);
-        }
+        },
       };
 
-      save(req, res, function(error) {
+      save(req, res, (error) => {
         assert.equal(null, error);
 
         done();
       });
-
     });
 
-    it("Has error when save", function(done) {
+    it('Has error when save', (done) => {
+      const save = helper.save('user');
 
-      var save = helper.save('user');
-
-      var req = {
+      const req = {
         hooks: {
           user: {
             id: 1,
             name: 'Redstone Zhao',
             age: 36,
-            changed: function() {
+            changed() {
               return ['name'];
             },
-            save: function(option) {
+            save(option) {
               assert.deepEqual({
-                fields: ['name']
+                fields: ['name'],
               }, option);
-              return new Promise(function(resolve, reject) {
-                setTimeout(function() {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => {
                   reject(Error('Hello world'));
                 }, 20);
               });
-            }
-          }
+            },
+          },
         },
         params: {
           id: 99,
-          name: 'Redstone Zhao'
-        }
+          name: 'Redstone Zhao',
+        },
       };
 
-      var res = {
-        send: function(data) {
+      const res = {
+        send(data) {
           assert.equal(req.hooks.user, data);
           assert.equal(true, req._resourceNotChanged);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Resource-Status', key);
           assert.equal('Unchanged', value);
-        }
+        },
       };
 
-      save(req, res, function(error) {
+      save(req, res, (error) => {
         assert.ok(error instanceof Error);
         assert.equal('Hello world', error.message);
 
         done();
       });
-
     });
-
   });
-
 });
