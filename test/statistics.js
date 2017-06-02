@@ -1,656 +1,660 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , Sequelize   = rest.Sequelize
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+const om = require('open-rest-with-mysql');
 
-var sequelize = new Sequelize();
-var Model = sequelize.define('book', {
+om(rest);
+const Sequelize = rest.Sequelize;
+const helper = require('../')(rest);
+
+const sequelize = new Sequelize();
+const Model = sequelize.define('book', {
   id: {
     type: Sequelize.INTEGER.UNSIGNED,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
-  name: Sequelize.STRING(100)
+  name: Sequelize.STRING,
 });
 
-describe("open-rest-helper-rest-statistics", function() {
-
-  describe("argument validate", function() {
-
-    it("Model argument unset", function(done) {
-      assert.throws(function() {
+/* eslint-disable new-cap */
+describe('open-rest-helper-rest-statistics', () => {
+  describe('argument validate', () => {
+    it('Model argument unset', (done) => {
+      assert.throws(() => {
         helper.statistics();
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      }, (err) => {
+        const msg = 'Model must be a class of Sequelize defined';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("Model argument type error", function(done) {
-      assert.throws(function() {
+    it('Model argument type error', (done) => {
+      assert.throws(() => {
         helper.statistics({});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      }, (err) => {
+        const msg = 'Model must be a class of Sequelize defined';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("opt argument type error", function(done) {
-      assert.throws(function() {
+    it('opt argument type error', (done) => {
+      assert.throws(() => {
         helper.statistics(Model, {});
-      }, function(err) {
-        return err instanceof Error && err.message === "FindAll option condition, req's value path, so `where` must be a string";
+      }, (err) => {
+        const msg = "FindAll option condition, req's value path, so `where` must be a string";
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("hook argument type error", function(done) {
-      assert.throws(function() {
+    it('hook argument type error', (done) => {
+      assert.throws(() => {
         helper.statistics(Model, 'opt', {});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Geted statistics data will hook on req.hooks[hook], so `hook` must be a string'
+      }, (err) => {
+        const msg = [
+          'Geted statistics data will hook on req.hooks[hook],',
+          'so `hook` must be a string',
+        ].join(' ');
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("conf argument type error", function(done) {
-      assert.throws(function() {
+    it('conf argument type error', (done) => {
+      assert.throws(() => {
         helper.statistics(Model, 'opt', null, {});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Status dynamic config, req\'s value path'
+      }, (err) => {
+        const msg = 'Status dynamic config, req\'s value path';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
-
   });
 
-  describe('Argument validate pass', function() {
-
-    it("normal", function(done) {
-      var Model = sequelize.define('book', {
+  describe('Argument validate pass', () => {
+    it('normal', (done) => {
+      const Model1 = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      Model.includes = {
+      Model1.includes = {
         creator: {
-          model: Model,
+          model: Model1,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
-      Model.stats = {
+      Model1.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model1.findAll = (options) => {
         const expect = {
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           offset: 0,
           limit: 20,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
-          raw: true
+          raw: true,
         };
         assert.deepEqual(expect, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+      Model1.findOne = (options) => {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           raw: true,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var req = {
+      const req = {
         params: {
           dimensions: 'date,user',
           metrics: 'count',
           id_gte: 200,
-          includes: 'creator'
+          includes: 'creator',
         },
         hooks: {
           opt: {
-            where: "`isDelete`='no'"
+            where: "`isDelete`='no'",
           },
           conf: {
             dimensions: {
-              date: "Date(`createdAt`)"
-            }
-          }
-        }
+              date: 'Date(`createdAt`)',
+            },
+          },
+        },
       };
 
-      var res = {
-        send: function(data) {
+      const res = {
+        send(data) {
           assert.deepEqual([{
             date: '2016-04-15',
             user: '赵思源',
-            count: 100000000
+            count: 100000000,
           }, {
             date: '2016-04-16',
             user: '赵思鸣',
-            count: 100000000
+            count: 100000000,
           }], data);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(20, value);
-        }
+        },
       };
-      var statistics = helper.statistics(Model, 'hooks.opt.where', null, 'hooks.conf');
-      statistics(req, res, function(error) {
+      const statistics = helper.statistics(Model1, 'hooks.opt.where', null, 'hooks.conf');
+      statistics(req, res, (error) => {
         try {
           assert.equal(null, error);
         } catch (e) {
           return done(e);
         }
-        done();
+        return done();
       });
-
     });
 
-    it("set hook, chainning call", function(done) {
-      var Model = sequelize.define('book', {
+    it('set hook, chainning call', (done) => {
+      const Model1 = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      Model.includes = {
+      Model1.includes = {
         creator: {
-          model: Model,
+          model: Model1,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
-      Model.stats = {
+      Model1.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model1.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           offset: 0,
           limit: 20,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+      Model1.findOne = (options) => {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           raw: true,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var req = {
+      const req = {
         params: {
           dimensions: 'date,user',
           metrics: 'count',
           id_gte: 200,
-          includes: 'creator'
+          includes: 'creator',
         },
         hooks: {
           opt: {
-            where: "`isDelete`='no'"
+            where: "`isDelete`='no'",
           },
           conf: {
             dimensions: {
-              date: "Date(`createdAt`)"
-            }
-          }
-        }
+              date: 'Date(`createdAt`)',
+            },
+          },
+        },
       };
 
-      var res = {
-        header: function(key, value) {
+      const res = {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(20, value);
-        }
+        },
       };
-      var statistics = helper
+      const statistics = helper
                         .statistics
-                        .Model(Model)
+                        .Model(Model1)
                         .where('hooks.opt.where')
                         .hook('stats')
                         .conf('hooks.conf')
                         .exec();
-      statistics(req, res, function(error) {
+      statistics(req, res, (error) => {
         try {
           assert.equal(null, error);
           assert.deepEqual([{
             date: '2016-04-15',
             user: '赵思源',
-            count: 100000000
+            count: 100000000,
           }, {
             date: '2016-04-16',
             user: '赵思鸣',
-            count: 100000000
+            count: 100000000,
           }], req.hooks.stats);
         } catch (e) {
           return done(e);
         }
-        done();
+        return done();
       });
-
     });
 
-    it("set hook, chainning call", function(done) {
-      var Model = sequelize.define('book', {
+    it('set hook, chainning call', (done) => {
+      const Model1 = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      Model.includes = {
+      Model1.includes = {
         creator: {
-          model: Model,
+          model: Model1,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
-      Model.stats = {
+      Model1.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model1.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "Date(`createdAt`) AS `date`",
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            'Date(`createdAt`) AS `date`',
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           group: [
-            "`date`",
-            "`user`"
+            '`date`',
+            '`user`',
           ],
           offset: 0,
           limit: 20,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
             resolve([{
               date: '2016-04-15',
               user: '赵思源',
-              count: 100000000
+              count: 100000000,
             }, {
               date: '2016-04-16',
               user: '赵思鸣',
-              count: 100000000
+              count: 100000000,
             }]);
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+
+      Model1.findOne = (options) => {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}},
+              { id: { $gte: 200 } },
               [
                 "`isDelete`='no'",
                 [
-                  ""
-                ]
-              ]
-            ]
+                  '',
+                ],
+              ],
+            ],
           },
           raw: true,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
           attributes: [
-            "COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT Date(`createdAt`), `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var req = {
+      const req = {
         params: {
           dimensions: 'date,user',
           metrics: 'count',
           id_gte: 200,
-          includes: 'creator'
+          includes: 'creator',
         },
         hooks: {
           opt: {
-            where: "`isDelete`='no'"
+            where: "`isDelete`='no'",
           },
           conf: {
             dimensions: {
-              date: "Date(`createdAt`)"
-            }
-          }
-        }
+              date: 'Date(`createdAt`)',
+            },
+          },
+        },
       };
 
-      var res = {
-        header: function(key, value) {
+      const res = {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(20, value);
-        }
+        },
       };
-      var statistics = helper
+      const statistics = helper
                         .statistics
-                        .Model(Model)
+                        .Model(Model1)
                         .where('hooks.opt.where')
                         .hook('stats')
                         .conf('hooks.conf')
                         .exec();
-      statistics(req, res, function(error) {
+      statistics(req, res, (error) => {
         try {
           assert.equal(null, error);
           assert.deepEqual([{
             date: '2016-04-15',
             user: '赵思源',
-            count: 100000000
+            count: 100000000,
           }, {
             date: '2016-04-16',
             user: '赵思鸣',
-            count: 100000000
+            count: 100000000,
           }], req.hooks.stats);
         } catch (e) {
           return done(e);
         }
-        done();
+        return done();
       });
-
     });
 
-    it("happen error", function(done) {
-      var Model = sequelize.define('book', {
+    it('happen error', (done) => {
+      const Model1 = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      Model.includes = {
+      Model1.includes = {
         creator: {
-          model: Model,
+          model: Model1,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
-      Model.stats = {
+      Model1.stats = {
         dimensions: {
-          user: "`creatorId`"
+          user: '`creatorId`',
         },
         metrics: {
-          count: 'COUNT(*)'
+          count: 'COUNT(*)',
         },
         pagination: {
           maxResults: 20,
           maxResultsLimit: 2000,
-          maxStartIndex: 50000
-        }
+          maxStartIndex: 50000,
+        },
       };
-      Model.findAll = function(options) {
+      Model1.findAll = (options) => {
         assert.deepEqual({
           attributes: [
-            "`creatorId` AS `user`",
-            "COUNT(*) AS `count`"
+            '`creatorId` AS `user`',
+            'COUNT(*) AS `count`',
           ],
           where: {
             $and: [
-              {id: {$gte: 200}}
-            ]
+              { id: { $gte: 200 } },
+            ],
           },
           group: [
-            "`user`"
+            '`user`',
           ],
           offset: 0,
           limit: 20,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
-          raw: true
+          raw: true,
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(Error('Hello world'));
           }, 50);
         });
-      },
-      Model.findOne = function(options) {
+      };
+
+      Model1.findOne = (options) => {
         assert.deepEqual({
           where: {
             $and: [
-              {id: {$gte: 200}}
-            ]
+              { id: { $gte: 200 } },
+            ],
           },
           raw: true,
           include: [{
-            model: Model,
+            model: Model1,
             as: 'creator',
             required: true,
-            attributes: []
+            attributes: [],
           }],
           attributes: [
-            "COUNT(DISTINCT `creatorId`) AS `count`"
-          ]
+            'COUNT(DISTINCT `creatorId`) AS `count`',
+          ],
         }, options);
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve({count: 20});
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({ count: 20 });
           }, 50);
         });
       };
-      var req = {
+      const req = {
         params: {
           dimensions: 'user',
           metrics: 'count',
           id_gte: 200,
-          includes: 'creator'
+          includes: 'creator',
         },
-        hooks: {}
+        hooks: {},
       };
 
-      var res = {
-        header: function(key, value) {
+      const res = {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(20, value);
-        }
+        },
       };
-      var statistics = helper
+      const statistics = helper
                         .statistics
-                        .Model(Model)
+                        .Model(Model1)
                         .hook('stats')
                         .exec();
-      statistics(req, res, function(error) {
+      statistics(req, res, (error) => {
         try {
           assert.ok(error instanceof Error);
           assert.equal('Hello world', error.message);
         } catch (e) {
           return done(e);
         }
-        done();
+        return done();
       });
-
     });
-
   });
-
 });
+/* eslint-enable new-cap */
