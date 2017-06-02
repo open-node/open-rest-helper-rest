@@ -1,130 +1,124 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+const om = require('open-rest-with-mysql');
 
-describe("open-rest-helper-rest-remove", function() {
+om(rest);
+const helper = require('../')(rest);
 
-  describe("Argument check", function() {
-
-    it("hook argument type error", function(done) {
-      assert.throws(function() {
+describe('open-rest-helper-rest-remove', () => {
+  describe('Argument check', () => {
+    it('hook argument type error', (done) => {
+      assert.throws(() => {
         helper.remove.hook([]).exec();
-      }, function(error) {
-        return error instanceof Error && error.message == 'Remove instance hook on req.hooks[hook], so `hook` must be a string';
+      }, (error) => {
+        const msg = 'Remove instance hook on req.hooks[hook], so `hook` must be a string';
+        return error instanceof Error && error.message === msg;
       });
 
       done();
     });
-
   });
 
-  describe("Argument all right", function() {
-
-    it("isDelete non-exists", function(done) {
-      var model = {
-        destroy: function() {
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+  describe('Argument all right', () => {
+    it('isDelete non-exists', (done) => {
+      const model = {
+        destroy() {
+          return new Promise((resolve) => {
+            setTimeout(() => {
               resolve();
             }, 100);
           });
-        }
+        },
       };
 
-      var req = {
+      const req = {
         hooks: {
-          user: model
-        }
+          user: model,
+        },
       };
 
-      var res = {
-        send: function(statusCode) {
+      const res = {
+        send(statusCode) {
           assert.equal(204, statusCode);
-        }
-      }
+        },
+      };
 
-      helper.remove('user')(req, res, function(error) {
+      helper.remove('user')(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
-
     });
 
-    it("isDelete exists", function(done) {
-      var model = {
+    it('isDelete exists', (done) => {
+      const model = {
         isDelete: 'no',
-        save: function() {
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+        save() {
+          return new Promise((resolve) => {
+            setTimeout(() => {
               resolve();
             }, 100);
           });
-        }
+        },
       };
 
-      var req = {
+      const req = {
         hooks: {
-          user: model
+          user: model,
         },
         user: {
           id: 5,
         },
       };
 
-      var res = {
-        send: function(statusCode) {
+      const res = {
+        send(statusCode) {
           assert.equal(204, statusCode);
-        }
-      }
+        },
+      };
 
-      helper.remove('user')(req, res, function(error) {
+      helper.remove('user')(req, res, (error) => {
         assert.equal(null, error);
         assert.equal('yes', req.hooks.user.isDelete);
         done();
       });
-
     });
 
-    it("only save isDelete when delete process", function(done) {
-      var model = {
+    it('only save isDelete when delete process', (done) => {
+      const model = {
         isDelete: 'no',
-        save: function(opts) {
+        save(opts) {
           assert.deepEqual(opts, {
             fields: ['isDelete', 'deletorId', 'deletedAt'],
             validate: false,
           });
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+          return new Promise((resolve) => {
+            setTimeout(() => {
               resolve();
             }, 100);
           });
-        }
+        },
       };
 
-      var req = {
+      const req = {
         hooks: {
-          user: model
+          user: model,
         },
         user: {
           id: 35,
         },
       };
 
-      var res = {
-        send: function(statusCode) {
+      const res = {
+        send(statusCode) {
           assert.equal(204, statusCode);
-        }
-      }
+        },
+      };
 
-      helper.remove('user')(req, res, function(error) {
+      helper.remove('user')(req, res, (error) => {
         assert.equal(null, error);
         assert.equal('yes', req.hooks.user.isDelete);
         done();
       });
-
     });
-
   });
-
 });
