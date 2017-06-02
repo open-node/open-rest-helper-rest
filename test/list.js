@@ -1,181 +1,181 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , Sequelize   = rest.Sequelize
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+const om = require('open-rest-with-mysql');
 
-var sequelize = new Sequelize();
-var Model = sequelize.define('book', {
+om(rest);
+const Sequelize = rest.Sequelize;
+const helper = require('../')(rest);
+
+const sequelize = new Sequelize();
+const Model = sequelize.define('book', {
   id: {
     type: Sequelize.INTEGER.UNSIGNED,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
-  name: Sequelize.STRING(100)
+  name: Sequelize.STRING,
 });
 
-describe("open-rest-helper-rest-list", function() {
-
-  describe("list", function() {
-
-    it("Model argument type error", function(done) {
-      assert.throws(function() {
+/* eslint-disable new-cap */
+describe('open-rest-helper-rest-list', () => {
+  describe('list', () => {
+    it('Model argument type error', (done) => {
+      assert.throws(() => {
         helper.list({});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      }, (err) => {
+        const msg = 'Model must be a class of Sequelize defined';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("opt argument type error", function(done) {
-      assert.throws(function() {
+    it('opt argument type error', (done) => {
+      assert.throws(() => {
         helper.list(Model, {});
-      }, function(err) {
-        return err instanceof Error && err.message === "FindAll option hooks's name, so `opt` must be a string"
+      }, (err) => {
+        const msg = "FindAll option hooks's name, so `opt` must be a string";
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("allowAttrs type error", function(done) {
-      assert.throws(function() {
+    it('allowAttrs type error', (done) => {
+      assert.throws(() => {
         helper.list(Model, null, 'string');
-      }, function(err) {
-        return err instanceof Error && err.message === "Allow return attrs's name array";
-      });
+      }, (err) => err instanceof Error && err.message === "Allow return attrs's name array");
       done();
     });
 
-    it("allowAttrs item type error", function(done) {
-      assert.throws(function() {
+    it('allowAttrs item type error', (done) => {
+      assert.throws(() => {
         helper.list(Model, null, [null]);
-      }, function(err) {
-        return err instanceof Error && err.message === 'Every item in allowAttrs must be a string.';
+      }, (err) => {
+        const msg = 'Every item in allowAttrs must be a string.';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("allowAttrs item non-exists error", function(done) {
-      assert.throws(function() {
+    it('allowAttrs item non-exists error', (done) => {
+      assert.throws(() => {
         helper.list(Model, null, ['price']);
-      }, function(err) {
-        return err instanceof Error && err.message === 'Attr non-exists: price';
-      });
+      }, (err) => err instanceof Error && err.message === 'Attr non-exists: price');
       done();
     });
 
-    it("All arguments validate pass", function(done) {
-      var list = helper.list(Model);
-      var req = {
+    it('All arguments validate pass', (done) => {
+      const list = helper.list(Model);
+      const req = {
         params: {
-          id: 1
-        }
+          id: 1,
+        },
       };
-      var res = {
-        send: function(ls) {
+      const res = {
+        send(ls) {
           assert.deepEqual([], ls);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(2, value);
-        }
+        },
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve([]);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(2);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it("opt set", function(done) {
-      var ls = [{
+    it('opt set', (done) => {
+      const ls = [{
         id: 1,
         name: 'Redstone',
-        email: '13740080@qq.com'
+        email: '13740080@qq.com',
       }, {
         id: 2,
         name: 'StonePHP',
-        email: '269718799@qq.com'
+        email: '269718799@qq.com',
       }];
-      var list = helper
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .hook('book')
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
-          _ignoreTotal: 'yes'
+          _ignoreTotal: 'yes',
         },
         hooks: {
           opt: {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
+              required: true,
+            }],
+          },
+        },
       };
-      var res = {
-        send: function(ls) {
+      const res = {
+        send(lss) {
           assert.deepEqual([{
             id: 1,
             name: 'Redstone',
           }, {
             id: 2,
             name: 'StonePHP',
-          }], ls);
+          }], lss);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(0, value);
-        }
+        },
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(ls);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(2);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it("count is 0", function(done) {
-      var list = helper
+    it('count is 0', (done) => {
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .hook('book')
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
@@ -185,48 +185,48 @@ describe("open-rest-helper-rest-list", function() {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
+              required: true,
+            }],
+          },
+        },
       };
-      var res = {
-        send: function(ls) {
+      const res = {
+        send(ls) {
           assert.deepEqual([], ls);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(0, value);
-        }
+        },
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve([]);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(0);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it("count is 0, hook unset", function(done) {
-      var list = helper
+    it('count is 0, hook unset', (done) => {
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
@@ -236,57 +236,57 @@ describe("open-rest-helper-rest-list", function() {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
+              required: true,
+            }],
+          },
+        },
       };
-      var res = {
-        send: function(ls) {
+      const res = {
+        send(ls) {
           assert.deepEqual([], ls);
         },
-        header: function(key, value) {
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(0, value);
-        }
+        },
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve([]);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(0);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it("count is 2, hook unset", function(done) {
-      var ls = [{
+    it('count is 2, hook unset', (done) => {
+      const ls = [{
         id: 1,
         name: 'Redstone',
-        email: '13740080@qq.com'
+        email: '13740080@qq.com',
       }, {
         id: 2,
         name: 'StonePHP',
-        email: '269718799@qq.com'
+        email: '269718799@qq.com',
       }];
-      var list = helper
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
@@ -296,52 +296,52 @@ describe("open-rest-helper-rest-list", function() {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
-      };
-      var res = {
-        send: function(ls) {
-          assert.deepEqual([{
-            id: 1
-          }, {
-            id: 2
-          }], ls);
+              required: true,
+            }],
+          },
         },
-        header: function(key, value) {
+      };
+      const res = {
+        send(lss) {
+          assert.deepEqual([{
+            id: 1,
+          }, {
+            id: 2,
+          }], lss);
+        },
+        header(key, value) {
           assert.equal('X-Content-Record-Total', key);
           assert.equal(2, value);
-        }
+        },
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(ls);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(2);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it("count error", function(done) {
-      var list = helper
+    it('count error', (done) => {
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
@@ -351,42 +351,42 @@ describe("open-rest-helper-rest-list", function() {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
+              required: true,
+            }],
+          },
+        },
       };
-      var res = {
+      const res = {
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve([]);
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(new Error('Hello world'));
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.ok(error instanceof Error);
         assert.equal('Hello world', error.message);
         done();
       });
     });
 
-    it("findAll error", function(done) {
-      var list = helper
+    it('findAll error', (done) => {
+      const list = helper
                     .list
                     .Model(Model)
                     .opt('opt')
                     .allowAttrs(['id', 'name'])
                     .exec();
-      var req = {
+      const req = {
         params: {
           id: 1,
           attrs: 'id',
@@ -396,34 +396,33 @@ describe("open-rest-helper-rest-list", function() {
             include: [{
               model: Model,
               as: 'creator',
-              required: true
-            }]
-          }
-        }
+              required: true,
+            }],
+          },
+        },
       };
-      var res = {
+      const res = {
       };
-      Model.findAll = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.findAll = () => (
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(new Error('Hi world'));
           }, 100);
-        });
-      };
-      Model.count = function(option) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             resolve(2);
           }, 100);
-        });
-      };
-      list(req, res, function(error) {
+        })
+      );
+      list(req, res, (error) => {
         assert.ok(error instanceof Error);
         assert.equal('Hi world', error.message);
         done();
       });
     });
-
   });
-
 });
+/* eslint-enable new-cap */
