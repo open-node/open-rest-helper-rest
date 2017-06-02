@@ -1,215 +1,198 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , Sequelize   = rest.Sequelize
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+require('open-rest-with-mysql')(rest);
 
-var sequelize = new Sequelize();
-var User = sequelize.define('book', {
-  id: {
-    type: Sequelize.INTEGER.UNSIGNED,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  name: Sequelize.STRING(100)
-});
+const helper = require('../')(rest);
 
-describe("open-rest-helper-rest", function() {
-
-  describe("validate argument", function() {
-
-    it("hook is null", function(done) {
-      assert.throws(function() {
+describe('open-rest-helper-rest', () => {
+  describe('validate argument', () => {
+    it('hook is null', (done) => {
+      assert.throws(() => {
         helper.detail();
-      }, function(err) {
-        return err instanceof Error && err.message === 'Geted instance will hook on req.hooks[hook], so `hook` must be a string';
+      }, (err) => {
+        const msg = 'Geted instance will hook on req.hooks[hook], so `hook` must be a string';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
 
-    it("hook type error", function(done) {
-      assert.throws(function() {
-        helper.detail({hi: 'world'});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Geted instance will hook on req.hooks[hook], so `hook` must be a string';
+    it('hook type error', (done) => {
+      assert.throws(() => {
+        helper.detail({ hi: 'world' });
+      }, (err) => {
+        const msg = 'Geted instance will hook on req.hooks[hook], so `hook` must be a string';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
 
-    it("attrs type error", function(done) {
-      assert.throws(function() {
+    it('attrs type error', (done) => {
+      assert.throws(() => {
         helper.detail('user', 'string');
-      }, function(err) {
-        return err instanceof Error && err.message === 'Attach other data dict. key => value, value is req\'s path';
+      }, (err) => {
+        const msg = 'Attach other data dict. key => value, value is req\'s path';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
 
-    it("attrs check error", function(done) {
-      assert.throws(function() {
-        helper.detail('user', {string: []});
-      }, function(err) {
-        return err instanceof Error && err.message === 'The attachs structure is key = > value, value must be a string';
+    it('attrs check error', (done) => {
+      assert.throws(() => {
+        helper.detail('user', { string: [] });
+      }, (err) => {
+        const msg = 'The attachs structure is key = > value, value must be a string';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
 
-    it("statusCode type error, String", function(done) {
-      assert.throws(function() {
+    it('statusCode type error, String', (done) => {
+      assert.throws(() => {
         helper.detail('user', null, 'hello');
-      }, function(err) {
-        return err instanceof Error && err.message === 'HTTP statusCode, defaultValue is 200';
-      });
+      }, (err) => err instanceof Error && err.message === 'HTTP statusCode, defaultValue is 200');
 
       done();
     });
 
-    it("statusCode type error, Array", function(done) {
-      assert.throws(function() {
+    it('statusCode type error, Array', (done) => {
+      assert.throws(() => {
         helper.detail('user', null, ['hello']);
-      }, function(err) {
-        return err instanceof Error && err.message === 'HTTP statusCode, defaultValue is 200';
-      });
+      }, (err) => err instanceof Error && err.message === 'HTTP statusCode, defaultValue is 200');
 
       done();
     });
-
   });
 
-  describe('argument all right', function() {
-
-    it('only hook', function(done) {
-      var req = {
+  describe('argument all right', () => {
+    it('only hook', (done) => {
+      const req = {
         hooks: {
           user: {
             id: 1,
-            name: 'Redstone'
-          }
+            name: 'Redstone',
+          },
         },
         params: {
-        }
+        },
       };
 
-      var res = {
-        send: function(statusCode, json) {
+      const res = {
+        send(statusCode, json) {
           assert.equal(200, statusCode);
-          assert.deepEqual({id: 1, name: 'Redstone'}, json);
-        }
+          assert.deepEqual({ id: 1, name: 'Redstone' }, json);
+        },
       };
 
-      helper.detail('user')(req, res, function(error) {
+      helper.detail('user')(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it('attachs statusCode = 201, allowAttrs = true', function(done) {
-      var req = {
+    it('attachs statusCode = 201, allowAttrs = true', (done) => {
+      const req = {
         hooks: {
           user: {
             id: 1,
             name: 'Redstone',
-            age: 36
+            age: 36,
           },
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {
           attrs: 'id,name,address',
-        }
+        },
       };
 
-      var res = {
-        send: function(statusCode, json) {
+      const res = {
+        send(statusCode, json) {
           assert.equal(201, statusCode);
           assert.deepEqual({
             id: 1,
             name: 'Redstone',
-            address: '北京市昌平区'
+            address: '北京市昌平区',
           }, json);
-        }
+        },
       };
 
-      var detail = helper.detail('user', {address: 'hooks.address'}, 201, true);
-      detail(req, res, function(error) {
+      const detail = helper.detail('user', { address: 'hooks.address' }, 201, true);
+      detail(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it('data is array', function(done) {
-      var req = {
+    it('data is array', (done) => {
+      const req = {
         hooks: {
           users: [{
             id: 1,
             name: 'Redstone',
-            age: 36
+            age: 36,
           }],
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {
           attrs: 'id,name',
-        }
+        },
       };
 
-      var res = {
-        send: function(statusCode, json) {
+      const res = {
+        send(statusCode, json) {
           assert.equal(200, statusCode);
           assert.deepEqual([{
             id: 1,
             name: 'Redstone',
           }], json);
-        }
+        },
       };
 
-      var detail = helper.detail('users', null, null, true);
-      detail(req, res, function(error) {
+      const detail = helper.detail('users', null, null, true);
+      detail(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
 
-    it('data exists JSON method', function(done) {
-      var req = {
+    it('data exists JSON method', (done) => {
+      const req = {
         hooks: {
           user: {
-            toJSON: function() {
+            toJSON() {
               return {
                 id: 1,
                 name: 'Redstone',
-                age: 36
+                age: 36,
               };
-            }
+            },
           },
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {
           attrs: 'id,name',
-        }
+        },
       };
 
-      var res = {
-        send: function(statusCode, json) {
+      const res = {
+        send(statusCode, json) {
           assert.equal(200, statusCode);
           assert.deepEqual({
             id: 1,
             name: 'Redstone',
           }, json);
-        }
+        },
       };
 
-      var detail = helper.detail('user', null, null, true);
-      detail(req, res, function(error) {
+      const detail = helper.detail('user', null, null, true);
+      detail(req, res, (error) => {
         assert.equal(null, error);
         done();
       });
     });
-
   });
-
 });
-
 
