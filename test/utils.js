@@ -1,314 +1,325 @@
-var assert      = require('assert')
-  , _           = require('lodash')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , Sequelize   = rest.Sequelize
-  , utils       = require('../lib/utils')
-  , sequelize   = new Sequelize();
+const assert = require('assert');
+const _ = require('lodash');
+const rest = require('open-rest');
+const om = require('open-rest-with-mysql');
+const utils = require('../lib/utils');
 
-var sequelize = new Sequelize();
+om(rest);
+const Sequelize = rest.Sequelize;
+const sequelize = new Sequelize();
 
-describe('utils', function() {
-
-  describe('#callback', function() {
-    it("normal", function(done) {
-      var promise = new Promise(function(resolve, reject) {
-        setTimeout(function() {
+describe('utils', () => {
+  describe('#callback', () => {
+    it('normal', (done) => {
+      const promise = new Promise((resolve) => {
+        setTimeout(() => {
           resolve();
         }, 100);
       });
-      utils.callback(promise, function(error) {
+      utils.callback(promise, (error) => {
         assert.equal(null, error);
         done();
       });
     });
   });
 
-  describe('#searchOpt', function() {
-    var Model = {
+  describe('#searchOpt', () => {
+    const Model = {
       name: 'user',
       searchCols: {
         name: {
           op: 'LIKE',
-          match: ['%{1}%']
+          match: ['%{1}%'],
         },
         email: {
           op: 'LIKE',
-          match: ['%{1}%']
+          match: ['%{1}%'],
         },
         id: {
           op: '=',
-          match: ['{1}']
-        }
-      }
+          match: ['{1}'],
+        },
+      },
     };
 
-    it("normal", function(done) {
-      var except = [
+    it('normal', (done) => {
+      const except = [
         ["((`user`.`name` LIKE '%a%'))"],
         ["((`user`.`email` LIKE '%a%'))"],
-        ["((`user`.`id` = 'a'))"]
+        ["((`user`.`id` = 'a'))"],
       ];
-      var real = utils.searchOpt(Model, '', 'a');
+      const real = utils.searchOpt(Model, '', 'a');
       assert.deepEqual(except, real);
       done();
     });
 
-    it("mutil keyword", function(done) {
-      var except = [
+    it('mutil keyword', (done) => {
+      const except = [
         [
           '((`user`.`name` LIKE \'%a%\'))',
-          '((`user`.`name` LIKE \'%b%\'))'
+          '((`user`.`name` LIKE \'%b%\'))',
         ],
         [
           '((`user`.`email` LIKE \'%a%\'))',
-          '((`user`.`email` LIKE \'%b%\'))'
+          '((`user`.`email` LIKE \'%b%\'))',
         ],
         [
           '((`user`.`id` = \'a\'))',
-          '((`user`.`id` = \'b\'))'
-        ]
+          '((`user`.`id` = \'b\'))',
+        ],
       ];
-      var real = utils.searchOpt(Model, '', 'a b');
+      const real = utils.searchOpt(Model, '', 'a b');
       assert.deepEqual(except, real);
       done();
     });
 
-    it("mutil match, single keyword", function(done) {
-      var Model = {
+    it('mutil match, single keyword', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['{1}', '%,{1}', '{1},%', '%,{1},%']
+            match: ['{1}', '%,{1}', '{1},%', '%,{1},%'],
           },
           email: {
             op: 'LIKE',
-            match: ['%{1}%']
+            match: ['%{1}%'],
           },
           id: {
             op: '=',
-            match: ['{1}']
-          }
-        }
+            match: ['{1}'],
+          },
+        },
       };
-      var except = [
+      const except = [
         [
-          '((`user`.`name` LIKE \'a\') OR (`user`.`name` LIKE \'%,a\') OR (`user`.`name` LIKE \'a,%\') OR (`user`.`name` LIKE \'%,a,%\'))',
-          '((`user`.`name` LIKE \'b\') OR (`user`.`name` LIKE \'%,b\') OR (`user`.`name` LIKE \'b,%\') OR (`user`.`name` LIKE \'%,b,%\'))'
+          [
+            '((`user`.`name` LIKE \'a\')',
+            '(`user`.`name` LIKE \'%,a\')',
+            '(`user`.`name` LIKE \'a,%\')',
+            '(`user`.`name` LIKE \'%,a,%\'))',
+          ].join(' OR '),
+          [
+            '((`user`.`name` LIKE \'b\')',
+            '(`user`.`name` LIKE \'%,b\')',
+            '(`user`.`name` LIKE \'b,%\')',
+            '(`user`.`name` LIKE \'%,b,%\'))',
+          ].join(' OR '),
         ],
         [
           '((`user`.`email` LIKE \'%a%\'))',
-          '((`user`.`email` LIKE \'%b%\'))'
+          '((`user`.`email` LIKE \'%b%\'))',
         ],
         [
           '((`user`.`id` = \'a\'))',
-          '((`user`.`id` = \'b\'))'
-        ]
+          '((`user`.`id` = \'b\'))',
+        ],
       ];
 
-      var real = utils.searchOpt(Model, '', 'a b');
+      const real = utils.searchOpt(Model1, '', 'a b');
       assert.deepEqual(except, real);
       done();
     });
 
-    it("container single quote", function(done) {
-      var Model = {
+    it('container single quote', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var except = [
-        ["((`user`.`name` LIKE '%a\\\'%'))"]
+      const except = [
+        ["((`user`.`name` LIKE '%a\\'%'))"],
       ];
-      var real = utils.searchOpt(Model, '', "a'");
+      const real = utils.searchOpt(Model1, '', "a'");
       assert.deepEqual(except, real);
       done();
     });
 
-    it("qstr isnt string", function(done) {
-      var Model = {
+    it('qstr isnt string', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var real = utils.searchOpt(Model, '', []);
+      const real = utils.searchOpt(Model1, '', []);
       assert.equal(undefined, real);
       done();
     });
 
-    it("qstr isnt space string", function(done) {
-      var Model = {
+    it('qstr isnt space string', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var real = utils.searchOpt(Model, '', '\t');
+      const real = utils.searchOpt(Model1, '', '\t');
       assert.equal(undefined, real);
       done();
     });
 
-    it("Model.searchCols unset", function(done) {
-      var Model = {
+    it('Model.searchCols unset', (done) => {
+      const Model1 = {
         name: 'user',
       };
-      var real = utils.searchOpt(Model, '', 'a');
+      const real = utils.searchOpt(Model1, '', 'a');
       assert.equal(undefined, real);
       done();
     });
 
-    it("as set", function(done) {
-      var Model = {
+    it('as set', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var real = utils.searchOpt(Model, '', 'a', 'user');
+      const real = utils.searchOpt(Model1, '', 'a', 'user');
       assert.deepEqual([], real);
       done();
     });
 
-    it("as set searchStr set", function(done) {
-      var Model = {
+    it('as set searchStr set', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var real = utils.searchOpt(Model, 'name,user.name', 'a', 'user');
+      const real = utils.searchOpt(Model1, 'name,user.name', 'a', 'user');
       assert.deepEqual([["((`user`.`name` LIKE '%a%'))"]], real);
       done();
     });
 
-    it("as set searchStr set no match", function(done) {
-      var Model = {
+    it('as set searchStr set no match', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var real = utils.searchOpt(Model, 'email,address', 'a', 'user');
+      const real = utils.searchOpt(Model1, 'email,address', 'a', 'user');
       assert.deepEqual([], real);
       done();
     });
   });
 
-  describe('#mergeSearchOrs', function() {
-    it('single searchOpt result', function(done) {
-      var Model = {
+  describe('#mergeSearchOrs', () => {
+    it('single searchOpt result', (done) => {
+      const Model = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var except = "((((`user`.`name` LIKE '%a%'))))";
-      var real = utils.mergeSearchOrs([utils.searchOpt(Model, '', "a")]);
+      const except = "((((`user`.`name` LIKE '%a%'))))";
+      const real = utils.mergeSearchOrs([utils.searchOpt(Model, '', 'a')]);
       assert.deepEqual(except, real);
       done();
     });
 
-    it('single searchOpt, mutil keyword result', function(done) {
-      var Model = {
+    it('single searchOpt, mutil keyword result', (done) => {
+      const Model = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var except = "((((`user`.`name` LIKE '%a%'))) AND (((`user`.`name` LIKE '%b%'))))";
-      var real = utils.mergeSearchOrs([utils.searchOpt(Model, '', "a b")]);
+      const except = "((((`user`.`name` LIKE '%a%'))) AND (((`user`.`name` LIKE '%b%'))))";
+      const real = utils.mergeSearchOrs([utils.searchOpt(Model, '', 'a b')]);
       assert.deepEqual(except, real);
       done();
     });
 
-    it('mutil searchOpt, single keyword result', function(done) {
-      var Model1 = {
+    it('mutil searchOpt, single keyword result', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var Model2 = {
+      const Model2 = {
         name: 'book',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var except = "((((`user`.`name` LIKE '%a%')) OR ((`book`.`name` LIKE '%a%'))))";
-      var real = utils.mergeSearchOrs([
-        utils.searchOpt(Model1, '', "a"),
-        utils.searchOpt(Model2, '', "a")
+      const except = "((((`user`.`name` LIKE '%a%')) OR ((`book`.`name` LIKE '%a%'))))";
+      const real = utils.mergeSearchOrs([
+        utils.searchOpt(Model1, '', 'a'),
+        utils.searchOpt(Model2, '', 'a'),
       ]);
       assert.deepEqual(except, real);
       done();
     });
 
-    it('mutil searchOpt, mutil keyword result', function(done) {
-      var Model1 = {
+    it('mutil searchOpt, mutil keyword result', (done) => {
+      const Model1 = {
         name: 'user',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var Model2 = {
+      const Model2 = {
         name: 'book',
         searchCols: {
           name: {
             op: 'LIKE',
-            match: ['%{1}%']
-          }
-        }
+            match: ['%{1}%'],
+          },
+        },
       };
-      var except = "((((`user`.`name` LIKE '%a%')) OR ((`book`.`name` LIKE '%a%'))) AND (((`user`.`name` LIKE '%b%')) OR ((`book`.`name` LIKE '%b%'))))";
-      var real = utils.mergeSearchOrs([
-        utils.searchOpt(Model1, '', "a b"),
-        utils.searchOpt(Model2, '', "a b")
+      const except = [
+        "((((`user`.`name` LIKE '%a%')) OR ((`book`.`name` LIKE '%a%')))",
+        "(((`user`.`name` LIKE '%b%')) OR ((`book`.`name` LIKE '%b%'))))",
+      ].join(' AND ');
+      const real = utils.mergeSearchOrs([
+        utils.searchOpt(Model1, '', 'a b'),
+        utils.searchOpt(Model2, '', 'a b'),
       ]);
       assert.deepEqual(except, real);
       done();
     });
   });
 
-  describe('#findOptFilter', function() {
-    it("The 4th argument col unset", function(done) {
-      var params, where = {};
-      params = {
+  describe('#findOptFilter', () => {
+    it('The 4th argument col unset', (done) => {
+      const params = {
         name: 'hello',
         names: 'zhangsan,lisi,wangwu',
         'name!': 'zhaoliu',
@@ -316,8 +327,9 @@ describe('utils', function() {
         address_like: '北京*',
         address_notLike: '*昌平*',
         age_gte: 20,
-        age_lte: '30'
+        age_lte: '30',
       };
+      const where = {};
       utils.findOptFilter(params, 'name', where);
 
       assert.deepEqual({
@@ -325,8 +337,8 @@ describe('utils', function() {
           $eq: 'hello',
           $in: ['zhangsan', 'lisi', 'wangwu'],
           $not: ['wangqi', 'houba'],
-          $ne: 'zhaoliu'
-        }
+          $ne: 'zhaoliu',
+        },
       }, where);
 
       utils.findOptFilter(params, 'age', where);
@@ -335,12 +347,12 @@ describe('utils', function() {
           $eq: 'hello',
           $in: ['zhangsan', 'lisi', 'wangwu'],
           $not: ['wangqi', 'houba'],
-          $ne: 'zhaoliu'
+          $ne: 'zhaoliu',
         },
         age: {
           $gte: 20,
-          $lte: '30'
-        }
+          $lte: '30',
+        },
       }, where);
 
       utils.findOptFilter(params, 'address', where);
@@ -349,218 +361,217 @@ describe('utils', function() {
           $eq: 'hello',
           $in: ['zhangsan', 'lisi', 'wangwu'],
           $not: ['wangqi', 'houba'],
-          $ne: 'zhaoliu'
+          $ne: 'zhaoliu',
         },
         age: {
           $gte: 20,
-          $lte: '30'
+          $lte: '30',
         },
         address: {
           $like: '北京%',
-          $notLike: '%昌平%'
-        }
+          $notLike: '%昌平%',
+        },
       }, where);
 
       done();
     });
 
-    it("col set", function(done) {
-      var params = {
+    it('col set', (done) => {
+      const params = {
         name: '.null.',
         'email!': '.null.',
         age: 20,
         genders: 'male,female',
-        'addresss!': '北七家,天通苑'
+        'addresss!': '北七家,天通苑',
       };
-      var where = {};
+      const where = {};
       utils.findOptFilter(params, 'name', where, 'personName');
       assert.deepEqual({
         personName: {
-          $eq: null
-        }
+          $eq: null,
+        },
       }, where);
 
       utils.findOptFilter(params, 'email', where, 'personEmail');
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
-        }
+          $ne: null,
+        },
       }, where);
 
       utils.findOptFilter(params, 'age', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
-        }
+          $eq: 20,
+        },
       }, where);
 
       utils.findOptFilter(params, 'gender', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
+          $eq: 20,
         },
         gender: {
-          $in: ['male', 'female']
-        }
+          $in: ['male', 'female'],
+        },
       }, where);
 
       utils.findOptFilter(params, 'address', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
+          $eq: 20,
         },
         gender: {
-          $in: ['male', 'female']
+          $in: ['male', 'female'],
         },
         address: {
-          $not: ['北七家', '天通苑']
-        }
+          $not: ['北七家', '天通苑'],
+        },
       }, where);
 
       params.parent_like = '*@xiongfei.me';
       utils.findOptFilter(params, 'parent', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
+          $eq: 20,
         },
         gender: {
-          $in: ['male', 'female']
+          $in: ['male', 'female'],
         },
         address: {
-          $not: ['北七家', '天通苑']
+          $not: ['北七家', '天通苑'],
         },
         parent: {
-          $like: '%@xiongfei.me'
-        }
+          $like: '%@xiongfei.me',
+        },
       }, where);
 
       params['parent!'] = 'haha@xiongfei.me';
       utils.findOptFilter(params, 'parent', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
+          $eq: 20,
         },
         gender: {
-          $in: ['male', 'female']
+          $in: ['male', 'female'],
         },
         address: {
-          $not: ['北七家', '天通苑']
+          $not: ['北七家', '天通苑'],
         },
         parent: {
           $like: '%@xiongfei.me',
-          $ne: 'haha@xiongfei.me'
-        }
+          $ne: 'haha@xiongfei.me',
+        },
       }, where);
 
       params.friend_notLike = '%@qq.com';
       utils.findOptFilter(params, 'friend', where);
       assert.deepEqual({
         personName: {
-          $eq: null
+          $eq: null,
         },
         personEmail: {
-          $ne: null
+          $ne: null,
         },
         age: {
-          $eq: 20
+          $eq: 20,
         },
         gender: {
-          $in: ['male', 'female']
+          $in: ['male', 'female'],
         },
         address: {
-          $not: ['北七家', '天通苑']
+          $not: ['北七家', '天通苑'],
         },
         parent: {
           $like: '%@xiongfei.me',
-          $ne: 'haha@xiongfei.me'
+          $ne: 'haha@xiongfei.me',
         },
         friend: {
-          $notLike: '%@qq.com'
-        }
+          $notLike: '%@qq.com',
+        },
       }, where);
 
       done();
     });
 
-    it("params unset", function(done) {
+    it('params unset', (done) => {
       assert.equal(undefined, utils.findOptFilter());
 
       done();
     });
 
-    it("params no object", function(done) {
+    it('params no object', (done) => {
       assert.equal(undefined, utils.findOptFilter('hello world'));
 
       done();
     });
 
-    it("$eq where[col] already exists", function(done) {
-      var params = {
+    it('$eq where[col] already exists', (done) => {
+      const params = {
         name: 'zhaoxiongfei',
-        age: 30
+        age: 30,
       };
-      var where = {
+      const where = {
         name: {
-          $ne: 'StonePHP'
+          $ne: 'StonePHP',
         },
         age: {
-          $gte: 20
-        }
+          $gte: 20,
+        },
       };
       utils.findOptFilter(params, 'name', where);
       utils.findOptFilter(params, 'age', where);
       assert.deepEqual({
         name: {
           $ne: 'StonePHP',
-          $eq: 'zhaoxiongfei'
+          $eq: 'zhaoxiongfei',
         },
         age: {
           $gte: 20,
-          $eq: 30
-        }
+          $eq: 30,
+        },
       }, where);
 
       done();
     });
-
   });
 
-  describe('#sort', function() {
-    it("conf unset", function(done) {
-      var params = {sort: 'name'};
+  describe('#sort', () => {
+    it('conf unset', (done) => {
+      const params = { sort: 'name' };
       assert.equal(undefined, utils.sort(params));
       assert.equal(undefined, utils.sort(params, ''));
       assert.equal(undefined, utils.sort(params, 0));
@@ -568,52 +579,52 @@ describe('utils', function() {
       done();
     });
 
-    it("params.sort unset", function(done) {
-      var params = {};
-      var conf = {
+    it('params.sort unset', (done) => {
+      const params = {};
+      const conf = {
         default: 'date',
-        defaultDirection: 'DESC'
+        defaultDirection: 'DESC',
       };
       assert.deepEqual([['date', 'DESC']], utils.sort(params, conf));
 
       done();
     });
-    it("params.sort unset and conf.default", function(done) {
-      var params = {};
-      var conf = {};
+    it('params.sort unset and conf.default', (done) => {
+      const params = {};
+      const conf = {};
       assert.equal(undefined, utils.sort(params, conf));
 
       done();
     });
 
-    it("params.sort set -id conf.allow unset", function(done) {
-      var params = {
-        sort: '-id'
+    it('params.sort set -id conf.allow unset', (done) => {
+      const params = {
+        sort: '-id',
       };
-      var conf = {};
+      const conf = {};
       assert.equal(undefined, utils.sort(params, conf));
 
       done();
     });
 
-    it("params.sort set -id conf.allow set", function(done) {
-      var params = {
-        sort: '-id'
+    it('params.sort set -id conf.allow set', (done) => {
+      const params = {
+        sort: '-id',
       };
-      var conf = {
-        allow: ['id']
+      const conf = {
+        allow: ['id'],
       };
       assert.deepEqual([['id', 'DESC']], utils.sort(params, conf));
 
       done();
     });
 
-    it("params.sort set id, conf.allow set", function(done) {
-      var params = {
-        sort: 'id'
+    it('params.sort set id, conf.allow set', (done) => {
+      const params = {
+        sort: 'id',
       };
-      var conf = {
-        allow: ['id']
+      const conf = {
+        allow: ['id'],
       };
       assert.deepEqual([['id', 'ASC']], utils.sort(params, conf));
 
@@ -621,9 +632,9 @@ describe('utils', function() {
     });
   });
 
-  describe('#modelInclude', function() {
-    it("include unset", function(done) {
-      var params = {};
+  describe('#modelInclude', () => {
+    it('include unset', (done) => {
+      const params = {};
       assert.equal(undefined, utils.modelInclude(params));
       assert.equal(undefined, utils.modelInclude(params, undefined));
       assert.equal(undefined, utils.modelInclude(params, null));
@@ -633,221 +644,225 @@ describe('utils', function() {
       done();
     });
 
-    it("params.includes unset or no string", function(done) {
-      var Model = sequelize.define('book', {
+    it('params.includes unset or no string', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      assert.equal(undefined, utils.modelInclude({}, {user: {model: Model}}));
-      assert.equal(undefined, utils.modelInclude({includes: []}, {user: {model: Model}}));
-      assert.equal(undefined, utils.modelInclude({includes: {}}, {user: {model: Model}}));
-      assert.equal(undefined, utils.modelInclude({includes: 20}, {user: {model: Model}}));
+      assert.equal(undefined, utils.modelInclude({}, { user: { model: Model } }));
+      assert.equal(undefined, utils.modelInclude({ includes: [] }, { user: { model: Model } }));
+      assert.equal(undefined, utils.modelInclude({ includes: {} }, { user: { model: Model } }));
+      assert.equal(undefined, utils.modelInclude({ includes: 20 }, { user: { model: Model } }));
 
       done();
     });
 
-    it("params.includes set one", function(done) {
-      var Model = sequelize.define('book', {
+    it('params.includes set one', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      var includes = {
+      const includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
-      assert.deepEqual([includes.user], utils.modelInclude({includes: 'user'}, includes));
+      assert.deepEqual([includes.user], utils.modelInclude({ includes: 'user' }, includes));
       done();
     });
 
-    it("params.includes set two", function(done) {
-      var Model = sequelize.define('book', {
+    it('params.includes set two', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      var includes = {
+      const includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: true
+          required: true,
         },
         company: {
           model: Model,
           as: 'company',
-          required: false
-        }
+          required: false,
+        },
       };
-      assert.deepEqual([includes.user, includes.company], utils.modelInclude({includes: 'user,company'}, includes));
+      assert.deepEqual([includes.user, includes.company],
+                       utils.modelInclude({ includes: 'user,company' }, includes));
       done();
     });
 
-    it("params.includes no match", function(done) {
-      var Model = sequelize.define('book', {
+    it('params.includes no match', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100)
+        name: Sequelize.STRING,
       });
-      var includes = {
+      const includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: true
+          required: true,
         },
         company: {
           model: Model,
           as: 'company',
-          required: false
-        }
+          required: false,
+        },
       };
-      assert.equal(undefined, utils.modelInclude({includes: 'author'}, includes));
+      assert.equal(undefined, utils.modelInclude({ includes: 'author' }, includes));
       done();
     });
   });
 
-  describe('#pageParams', function() {
-    it("pagination unset, params unset", function(done) {
+  describe('#pageParams', () => {
+    it('pagination unset, params unset', (done) => {
       assert.deepEqual({
         offset: 0,
-        limit: 10
+        limit: 10,
       }, utils.pageParams(null, {}));
 
       done();
     });
 
-    it("pagination unset, params set", function(done) {
+    it('pagination unset, params set', (done) => {
       assert.deepEqual({
         offset: 100,
-        limit: 20
-      }, utils.pageParams(null, {startIndex: 100, maxResults: 20}));
+        limit: 20,
+      }, utils.pageParams(null, { startIndex: 100, maxResults: 20 }));
 
       done();
     });
 
-    it("pagination unset, params beyond limit", function(done) {
+    it('pagination unset, params beyond limit', (done) => {
       assert.deepEqual({
         offset: 10000,
-        limit: 1000
-      }, utils.pageParams(null, {startIndex: 100000000, maxResults: 2000000}));
+        limit: 1000,
+      }, utils.pageParams(null, { startIndex: 100000000, maxResults: 2000000 }));
 
       done();
     });
 
-    it("pagination set, params beyond limit", function(done) {
-      var pagination = {
+    it('pagination set, params beyond limit', (done) => {
+      const pagination = {
         maxResults: 100,
         maxStartIndex: 100000,
         maxResultsLimit: 10000,
       };
       assert.deepEqual({
         offset: 100000,
-        limit: 10000
-      }, utils.pageParams(pagination, {startIndex: 100000000, maxResults: 2000000}));
+        limit: 10000,
+      }, utils.pageParams(pagination, { startIndex: 100000000, maxResults: 2000000 }));
 
       done();
     });
   });
 
-  describe('#itemAttrFilter', function() {
-    it("noraml", function(done) {
-      var fn = utils.itemAttrFilter(['name', 'age', 'gender']);
-      var obj = {
+  describe('#itemAttrFilter', () => {
+    it('noraml', (done) => {
+      const fn = utils.itemAttrFilter(['name', 'age', 'gender']);
+      const obj = {
         name: 'Redstone Zhao',
         age: 36,
         gender: 'male',
         email: '13740080@qq.com',
-        address: '北京市昌平区'
+        address: '北京市昌平区',
       };
 
       assert.deepEqual({
         name: 'Redstone Zhao',
         age: 36,
-        gender: 'male'
+        gender: 'male',
       }, fn(obj));
 
       done();
     });
   });
 
-  describe('#listAttrFilter', function() {
-    it('normal', function(done) {
-      var ls = [{
+  describe('#listAttrFilter', () => {
+    it('normal', (done) => {
+      const ls = [{
         name: 'Redstone Zhao',
         age: 36,
         gender: 'male',
         email: '13740080@qq.com',
-        address: '北京市昌平区'
+        address: '北京市昌平区',
       }];
       assert.deepEqual([{
         name: 'Redstone Zhao',
         age: 36,
-        gender: 'male'
+        gender: 'male',
       }], utils.listAttrFilter(ls, ['name', 'age', 'gender']));
 
       done();
     });
 
-    it('allowAttrs unset', function(done) {
-      var ls = [{
+    it('allowAttrs unset', (done) => {
+      const ls = [{
         name: 'Redstone Zhao',
         age: 36,
         gender: 'male',
         email: '13740080@qq.com',
-        address: '北京市昌平区'
+        address: '北京市昌平区',
       }];
       assert.deepEqual([{
         name: 'Redstone Zhao',
         age: 36,
         gender: 'male',
         email: '13740080@qq.com',
-        address: '北京市昌平区'
+        address: '北京市昌平区',
       }], utils.listAttrFilter(ls));
 
       done();
     });
   });
 
-  describe('#findOpts', function() {
-    it("normal", function(done) {
-      var Model = sequelize.define('book', {
+  describe('#findOpts', () => {
+    it('normal', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        isDelete: Sequelize.ENUM('yes', 'no')
+        name: Sequelize.STRING,
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
-      var params = {
-        showDelete: 'yes'
+      let params = {
+        showDelete: 'yes',
       };
 
-      var opts = utils.findAllOpts(Model, params);
+      let opts = utils.findAllOpts(Model, params);
       assert.deepEqual({
         include: undefined,
         order: undefined,
         offset: 0,
-        limit: 10
+        limit: 10,
       }, opts);
 
       params = {
-        name: 'hi'
+        name: 'hi',
       };
 
       opts = utils.findAllOpts(Model, params);
@@ -856,146 +871,155 @@ describe('utils', function() {
         order: undefined,
         where: {
           name: {
-            $eq: 'hi'
+            $eq: 'hi',
           },
-          isDelete: 'no'
+          isDelete: 'no',
         },
         offset: 0,
-        limit: 10
+        limit: 10,
       }, opts);
 
       done();
     });
 
-    it("includes", function(done) {
-      var Model = sequelize.define('book', {
+    it('includes', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        isDelete: Sequelize.ENUM('yes', 'no')
+        name: Sequelize.STRING,
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
       Model.includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
 
-      var params = {
+      const params = {
         includes: 'user',
         showDelete: 'yes',
         startIndex: 100,
         maxResults: 10,
-        sort: '-id'
+        sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
+      const opts = utils.findAllOpts(Model, params);
       assert.deepEqual({
         include: [Model.includes.user],
         order: [['id', 'DESC']],
         offset: 100,
-        limit: 10
+        limit: 10,
       }, opts);
 
       done();
     });
 
-    it("includes params.showDelete false", function(done) {
-      var Model = sequelize.define('book', {
+    it('includes params.showDelete false', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        isDelete: Sequelize.ENUM('yes', 'no')
+        name: Sequelize.STRING,
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
       Model.includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: true
-        }
+          required: true,
+        },
       };
 
-      var params = {
+      const params = {
         includes: 'user',
         startIndex: 100,
         maxResults: 10,
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
-      var include = _.clone(Model.includes.user);
+      const opts = utils.findAllOpts(Model, params);
+      const include = _.clone(Model.includes.user);
       include.where = {
         $or: [{
-          isDelete: 'no'
-        }]
+          isDelete: 'no',
+        }],
       };
       assert.deepEqual({
         include: [include],
         order: [['id', 'DESC']],
         offset: 100,
         where: {
-          isDelete: 'no'
+          isDelete: 'no',
         },
-        limit: 10
+        limit: 10,
       }, opts);
 
       done();
     });
 
-    it("includes include required false, allowIncludeCols", function(done) {
-      var Model = sequelize.define('book', {
+    it('includes include required false, allowIncludeCols', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        isDelete: Sequelize.ENUM('yes', 'no')
+        name: Sequelize.STRING,
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
       Model.includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: false
-        }
+          required: false,
+        },
       };
 
       Model.allowIncludeCols = ['id', 'name'];
 
-      var params = {
+      const params = {
         includes: 'user',
         startIndex: 100,
         maxResults: 10,
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
-      var include = _.clone(Model.includes.user);
+      const opts = utils.findAllOpts(Model, params);
+      const include = _.clone(Model.includes.user);
       include.where = {
         $or: [{
-          isDelete: 'no'
+          isDelete: 'no',
         }, {
-          id: null
-        }]
+          id: null,
+        }],
       };
       include.attributes = ['id', 'name'];
       assert.deepEqual({
@@ -1003,55 +1027,58 @@ describe('utils', function() {
         order: [['id', 'DESC']],
         offset: 100,
         where: {
-          isDelete: 'no'
+          isDelete: 'no',
         },
-        limit: 10
+        limit: 10,
       }, opts);
 
       done();
     });
 
-    it("includes include required false, allowIncludeCols, search", function(done) {
-      var Model = sequelize.define('book', {
+    it('includes include required false, allowIncludeCols, search', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
+        name: Sequelize.STRING,
         email: Sequelize.STRING,
-        isDelete: Sequelize.ENUM('yes', 'no')
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
       Model.includes = {
         user: {
           model: Model,
           as: 'creator',
-          required: false
-        }
+          required: false,
+        },
       };
 
       Model.searchCols = {
         name: {
           op: 'LIKE',
-          match: ['%{1}%']
+          match: ['%{1}%'],
         },
         email: {
           op: 'LIKE',
-          match: ['%{1}%']
+          match: ['%{1}%'],
         },
         id: {
           op: '=',
-          match: ['{1}']
-        }
+          match: ['{1}'],
+        },
       };
 
       Model.allowIncludeCols = ['id', 'name'];
 
-      var params = {
+      const params = {
         q: 'a',
         attrs: 'id,name',
         includes: 'user',
@@ -1060,14 +1087,14 @@ describe('utils', function() {
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
-      var include = _.clone(Model.includes.user);
+      const opts = utils.findAllOpts(Model, params);
+      const include = _.clone(Model.includes.user);
       include.where = {
         $or: [{
-          isDelete: 'no'
+          isDelete: 'no',
         }, {
-          id: null
-        }]
+          id: null,
+        }],
       };
       include.attributes = ['id', 'name'];
       assert.deepEqual({
@@ -1078,47 +1105,54 @@ describe('utils', function() {
         where: {
           isDelete: 'no',
           $or: [[
-            "((((`book`.`name` LIKE '%a%')) OR ((`book`.`email` LIKE '%a%')) OR ((`book`.`id` = 'a'))))",
-            ['']
-          ]]
+            [
+              "((((`book`.`name` LIKE '%a%'))",
+              "((`book`.`email` LIKE '%a%'))",
+              "((`book`.`id` = 'a'))))",
+            ].join(' OR '),
+            [''],
+          ]],
         },
-        attributes: ['id', 'name']
+        attributes: ['id', 'name'],
       }, opts);
 
       done();
     });
 
-    it("attrs type isnt string", function(done) {
-      var Model = sequelize.define('book', {
+    it('attrs type isnt string', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
+        name: Sequelize.STRING,
         email: Sequelize.STRING,
-        isDelete: Sequelize.ENUM('yes', 'no')
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
-      var params = {
+      let params = {
         attrs: [],
         startIndex: 100,
         maxResults: 10,
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
+      let opts = utils.findAllOpts(Model, params);
       assert.deepEqual({
         include: undefined,
         order: [['id', 'DESC']],
         offset: 100,
         limit: 10,
         where: {
-          isDelete: 'no'
-        }
+          isDelete: 'no',
+        },
       }, opts);
 
       params = {
@@ -1128,169 +1162,183 @@ describe('utils', function() {
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params);
+      opts = utils.findAllOpts(Model, params);
       assert.deepEqual({
         include: undefined,
         order: [['id', 'DESC']],
         offset: 100,
         limit: 10,
         where: {
-          isDelete: 'no'
-        }
+          isDelete: 'no',
+        },
       }, opts);
 
       done();
     });
 
-    it("isAll true", function(done) {
-      var Model = sequelize.define('book', {
+    it('isAll true', (done) => {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
+        name: Sequelize.STRING,
         email: Sequelize.STRING,
-        isDelete: Sequelize.ENUM('yes', 'no')
+        isDelete: {
+          type: Sequelize.ENUM,
+          values: ['yes', 'no'],
+        },
       });
       Model.sort = {
         default: 'id',
-        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt']
+        allow: ['id', 'orderNum', 'name', 'mediaId', '', 'updatedAt'],
       };
-      var params = {
+      const params = {
         attrs: [],
         startIndex: 100,
         maxResults: 10,
         sort: '-id',
       };
 
-      var opts = utils.findAllOpts(Model, params, true);
+      const opts = utils.findAllOpts(Model, params, true);
       assert.deepEqual({
         include: undefined,
         order: [['id', 'DESC']],
         where: {
-          isDelete: 'no'
-        }
+          isDelete: 'no',
+        },
       }, opts);
 
       done();
     });
   });
 
-  describe('#pickParams', function() {
-
-    it("onlyAdminCols, current isnt admin", function(done) {
-      var req = {
+  describe('#pickParams', () => {
+    it('onlyAdminCols, current isnt admin', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
-          role: 'admin'
+          role: 'admin',
         },
-        isAdmin: false
+        isAdmin: false,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
 
       assert.deepEqual({
-        name: 'Redstone Zhao'
+        name: 'Redstone Zhao',
       }, utils.pickParams(req, ['name', 'role'], Model));
 
       done();
     });
 
-    it("onlyAdminCols, current isnt admin", function(done) {
-      var req = {
+    it('onlyAdminCols, current isnt admin', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
           role: 'admin',
-          status: 'enabled'
+          status: 'enabled',
         },
-        isAdmin: false
+        isAdmin: false,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
 
       assert.deepEqual({
-        name: 'Redstone Zhao'
+        name: 'Redstone Zhao',
       }, utils.pickParams(req, ['name', 'role', 'status', 'email'], Model));
 
       done();
     });
 
-    it("column is number type, value isnt null", function(done) {
-      var req = {
+    it('column is number type, value isnt null', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
           role: 'admin',
           status: 'enabled',
-          price: '999999'
+          price: '999999',
         },
-        isAdmin: false
+        isAdmin: false,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
         price: Sequelize.INTEGER.UNSIGNED,
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
 
       assert.deepEqual({
-        price: 999999
+        price: 999999,
       }, utils.pickParams(req, ['price'], Model));
 
       done();
     });
 
-    it("column is number type, value is null, allowNull false", function(done) {
-      var req = {
+    it('column is number type, value is null, allowNull false', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
           role: 'admin',
           status: 'enabled',
-          price: null
+          price: null,
         },
-        isAdmin: true
+        isAdmin: true,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
         price: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
-          defaultValue: 888888
+          defaultValue: 888888,
         },
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
@@ -1298,36 +1346,39 @@ describe('utils', function() {
       assert.deepEqual({
         name: 'Redstone Zhao',
         role: 'admin',
-        price: 888888
+        price: 888888,
       }, utils.pickParams(req, ['price', 'name', 'role'], Model));
 
       done();
     });
 
-    it("column is number type, value is null, allowNull: true", function(done) {
-      var req = {
+    it('column is number type, value is null, allowNull: true', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
           role: 'admin',
           status: 'enabled',
-          price: null
+          price: null,
         },
-        isAdmin: true
+        isAdmin: true,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
         price: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: true,
-          defaultValue: 888888
+          defaultValue: 888888,
         },
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
@@ -1335,36 +1386,39 @@ describe('utils', function() {
       assert.deepEqual({
         name: 'Redstone Zhao',
         role: 'admin',
-        price: null
+        price: null,
       }, utils.pickParams(req, ['price', 'name', 'role'], Model));
 
       done();
     });
 
-    it("column is number type, value is 0, allowNull: true", function(done) {
-      var req = {
+    it('column is number type, value is 0, allowNull: true', (done) => {
+      const req = {
         params: {
           name: 'Redstone Zhao',
           role: 'admin',
           status: 'enabled',
-          price: 0
+          price: 0,
         },
-        isAdmin: true
+        isAdmin: true,
       };
 
-      var Model = sequelize.define('book', {
+      const Model = sequelize.define('book', {
         id: {
           type: Sequelize.INTEGER.UNSIGNED,
           primaryKey: true,
-          autoIncrement: true
+          autoIncrement: true,
         },
-        name: Sequelize.STRING(100),
         price: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: true,
-          defaultValue: 888888
+          defaultValue: 888888,
         },
-        role: Sequelize.ENUM('member', 'admin')
+        name: Sequelize.STRING,
+        role: {
+          type: Sequelize.ENUM,
+          values: ['member', 'admin'],
+        },
       });
 
       Model.onlyAdminCols = ['role'];
@@ -1372,12 +1426,10 @@ describe('utils', function() {
       assert.deepEqual({
         name: 'Redstone Zhao',
         role: 'admin',
-        price: 0
+        price: 0,
       }, utils.pickParams(req, ['price', 'name', 'role'], Model));
 
       done();
     });
-
   });
-
 });
