@@ -1,178 +1,173 @@
-var assert      = require('assert')
-  , rest        = require('open-rest')
-  , om          = require('open-rest-with-mysql')(rest)
-  , _           = require('lodash')
-  , Sequelize   = rest.Sequelize
-  , helper      = require('../')(rest);
+const assert = require('assert');
+const rest = require('open-rest');
+const om = require('open-rest-with-mysql');
+const _ = require('lodash');
+const helper = require('../')(rest);
 
-var sequelize = new Sequelize();
-var Model = sequelize.define('book', {
+om(rest);
+const Sequelize = rest.Sequelize;
+const sequelize = new Sequelize();
+const Model = sequelize.define('book', {
   id: {
     type: Sequelize.INTEGER.UNSIGNED,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
-  name: Sequelize.STRING(100),
-  age: Sequelize.INTEGER.UNSIGNED
+  name: Sequelize.STRING,
+  age: Sequelize.INTEGER.UNSIGNED,
 });
 
-var validateSuccess = function(model) {
-  return function() {
-    return new Promise(function(resolve, reject) {
-      setTimeout(function() {
+const validateSuccess = (model) => (
+  () => (
+    new Promise((resolve) => {
+      setTimeout(() => {
         resolve(model);
       }, 10);
-    });
-  };
-};
+    })
+  )
+);
 
-var validateFailure = function(model) {
-  return function() {
-    return new Promise(function(resolve, reject) {
-      setTimeout(function() {
+const validateFailure = () => (
+  () => (
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
         reject(Error('This is a test error message'));
       }, 10);
-    });
-  };
-};
+    })
+  )
+);
 
 
-describe("open-rest-helper-rest-batchAdd", function() {
-
-  describe("Argument validate error", function() {
-
-    it("Model argument unset", function(done) {
-      assert.throws(function() {
+describe('open-rest-helper-rest-batchAdd', () => {
+  describe('Argument validate error', () => {
+    it('Model argument unset', (done) => {
+      assert.throws(() => {
         helper.batchAdd();
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      }, (err) => {
+        const msg = 'Model must be a class of Sequelize defined';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("Model argument type error", function(done) {
-      assert.throws(function() {
+    it('Model argument type error', (done) => {
+      assert.throws(() => {
         helper.batchAdd({});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
-      });
+      }, (err) => (
+        err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
+      ));
       done();
     });
 
-    it("cols type error", function(done) {
-      assert.throws(function() {
+    it('cols type error', (done) => {
+      assert.throws(() => {
         helper.batchAdd(Model, 'string');
-      }, function(err) {
-        return err instanceof Error && err.message === "Allow writed attrs's name array"
-      });
+      }, (err) => err instanceof Error && err.message === "Allow writed attrs's name array");
       done();
     });
 
-    it("cols item type error", function(done) {
-      assert.throws(function() {
+    it('cols item type error', (done) => {
+      assert.throws(() => {
         helper.batchAdd(Model, [null]);
-      }, function(err) {
-        return err instanceof Error && err.message === 'Every item in cols must be a string.';
-      });
+      }, (err) => err instanceof Error && err.message === 'Every item in cols must be a string.');
       done();
     });
 
-    it("cols item non-exists error", function(done) {
-      assert.throws(function() {
+    it('cols item non-exists error', (done) => {
+      assert.throws(() => {
         helper.batchAdd(Model, ['id', 'price']);
-      }, function(err) {
-        return err instanceof Error && err.message === 'Attr non-exists: price';
-      });
+      }, (err) => err instanceof Error && err.message === 'Attr non-exists: price');
       done();
     });
 
-    it("hook argument type error", function(done) {
-      assert.throws(function() {
+    it('hook argument type error', (done) => {
+      assert.throws(() => {
         helper.batchAdd(Model, null, {});
-      }, function(err) {
-        return err instanceof Error && err.message === 'Added instance will hook on req.hooks[hook], so `hook` must be a string'
+      }, (err) => {
+        const msg = 'Added instance will hook on req.hooks[hook], so `hook` must be a string';
+        return err instanceof Error && err.message === msg;
       });
       done();
     });
 
-    it("attrs type error", function(done) {
-      assert.throws(function() {
+    it('attrs type error', (done) => {
+      assert.throws(() => {
         helper.batchAdd(Model, null, null, 'string');
-      }, function(err) {
-        return err instanceof Error && err.message === 'Attach other data dict. key => value, value is req\'s path';
+      }, (err) => {
+        const msg = 'Attach other data dict. key => value, value is req\'s path';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
 
-    it("attrs check error", function(done) {
-      assert.throws(function() {
-        helper.batchAdd(Model, null, null, {string: []});
-      }, function(err) {
-        return err instanceof Error && err.message === 'The attachs structure is key = > value, value must be a string';
+    it('attrs check error', (done) => {
+      assert.throws(() => {
+        helper.batchAdd(Model, null, null, { string: [] });
+      }, (err) => {
+        const msg = 'The attachs structure is key = > value, value must be a string';
+        return err instanceof Error && err.message === msg;
       });
 
       done();
     });
-
   });
 
-  describe("All aguments validate passed", function() {
+  describe('All aguments validate passed', () => {
+    it('normal cols set, hook set, body is array', (done) => {
+      const add = helper.batchAdd(Model, ['name', 'age'], 'user', { address: 'hooks.address' });
 
-    it("normal cols set, hook set, body is array", function(done) {
-
-      var add = helper.batchAdd(Model, ['name', 'age'], 'user', {address: 'hooks.address'});
-
-      var req = {
+      const req = {
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: [{
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }]
+          age: 36,
+        }],
       };
 
-      var res = {
-        send: function(statusCode, data) {
+      const res = {
+        send(statusCode, data) {
           try {
             assert.equal(204, statusCode);
-          } catch(e) {
+          } catch (e) {
             console.error('sendError', e, data);
             done(e);
           }
-        }
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve) => {
+              setTimeout(() => {
                 resolve(model);
               }, 10);
             });
           },
-          validate: validateSuccess(model)
         });
+
+        model.validate = validateSuccess(model);
 
         return model;
       };
 
-      Model.bulkCreate = function(ls) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            resolve(_.map(ls, function(x, i) {
+      Model.bulkCreate = (ls) => (
+        new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(_.map(ls, (x, i) => {
               x.id = i + 1;
               return x;
             }));
           }, 10);
-        });
-      };
+        })
+      );
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.equal(null, error);
 
@@ -181,68 +176,66 @@ describe("open-rest-helper-rest-batchAdd", function() {
           done(e);
         }
       });
-
     });
 
-    it("normal cols set, hook set, body isnot array, attachs", function(done) {
+    it('normal cols set, hook set, body isnot array, attachs', (done) => {
+      const add = helper.batchAdd(Model, ['name', 'age'], 'user', { address: 'hooks.address' });
 
-      var add = helper.batchAdd(Model, ['name', 'age'], 'user', {address: 'hooks.address'});
-
-      var req = {
+      const req = {
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      var res = {
-        send: function(statusCode, data) {
+      const res = {
+        send(statusCode, data) {
           try {
             assert.equal(201, statusCode);
             assert.deepEqual({
               id: 1,
               name: 'Redstone Zhao',
               age: 36,
-              address: '北京市昌平区'
+              address: '北京市昌平区',
             }, _.pick(data, ['id', 'name', 'age', 'address']));
-          } catch(e) {
+          } catch (e) {
             console.error('sendError', e, data);
             done(e);
           }
-        }
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve) => {
+              setTimeout(() => {
                 resolve(model);
               }, 10);
             });
           },
-          validate: validateSuccess(model)
         });
+        model.validate = validateSuccess(model);
 
         return model;
       };
 
 
-      Model.create = function(x) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.create = (x) => (
+        new Promise((resolve) => {
+          setTimeout(() => {
             x.id = 1;
             resolve(x);
           }, 10);
-        });
-      };
+        })
+      );
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.equal(null, error);
         } catch (e) {
@@ -250,42 +243,40 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
 
-    it("normal cols set, hook set, body isnot array, no attachs", function(done) {
+    it('normal cols set, hook set, body isnot array, no attachs', (done) => {
+      const add = helper.batchAdd(Model, ['name', 'age'], 'user');
 
-      var add = helper.batchAdd(Model, ['name', 'age'], 'user');
-
-      var req = {
+      const req = {
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      var res = {
-        send: function(statusCode, data) {
+      const res = {
+        send(statusCode, data) {
           try {
             assert.equal(201, statusCode);
             assert.deepEqual({
               id: 1,
               name: 'Redstone Zhao',
-              age: 36
+              age: 36,
             }, _.pick(data, ['id', 'name', 'age', 'address']));
-          } catch(e) {
+          } catch (e) {
             console.error('sendError', e, data);
             done(e);
           }
-        }
+        },
       };
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.equal(null, error);
         } catch (e) {
@@ -293,53 +284,51 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
 
-    it("writableCols, creatorId, clientIp, validate failure", function(done) {
-
+    it('writableCols, creatorId, clientIp, validate failure', (done) => {
       Model.writableCols = ['name', 'age', 'address'];
       Model.rawAttributes.creatorId = {};
       Model.rawAttributes.clientIp = {};
 
-      var add = helper.batchAdd(Model);
+      const add = helper.batchAdd(Model);
 
-      var req = {
+      const req = {
         user: {
-          id: 3
+          id: 3,
         },
         headers: {
-          'x-forwarded-for':  '192.168.199.188'
+          'x-forwarded-for': '192.168.199.188',
         },
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve) => {
+              setTimeout(() => {
                 resolve(model);
               }, 10);
             });
           },
-          validate: validateFailure(model)
         });
+        model.validate = validateFailure(model);
 
         return model;
       };
 
-      var res = {};
+      const res = {};
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.ok(error);
           assert.ok(error instanceof Error);
@@ -349,56 +338,52 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
 
-    it("writableCols, creatorId, clientIp, validate success, model.toJSON", function(done) {
-
+    it('writableCols, creatorId, clientIp, validate success, model.toJSON', (done) => {
       Model.writableCols = ['name', 'age', 'address'];
       Model.rawAttributes.creatorId = {};
       Model.rawAttributes.clientIp = {};
 
-      var add = helper.batchAdd(Model);
+      const add = helper.batchAdd(Model);
 
-      var req = {
+      const req = {
         user: {
-          id: 3
+          id: 3,
         },
         headers: {
-          'x-forwarded-for':  '192.168.199.188'
+          'x-forwarded-for': '192.168.199.188',
         },
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve) => {
+              setTimeout(() => {
                 resolve(model);
               }, 10);
             });
           },
-          validate: validateSuccess(model)
         });
+        model.validate = validateFailure(model);
 
-        model.toJSON = function() {
-          return model;
-        };
+        model.toJSON = () => model;
 
         return model;
       };
 
-      var res = {
-        send: function(statusCode, data) {
+      const res = {
+        send(statusCode, data) {
           try {
             assert.equal(201, statusCode);
             assert.deepEqual({
@@ -406,16 +391,16 @@ describe("open-rest-helper-rest-batchAdd", function() {
               name: 'Redstone Zhao',
               age: 36,
               clientIp: '192.168.199.188',
-              creatorId: 3
+              creatorId: 3,
             }, _.pick(data, ['id', 'name', 'age', 'address', 'clientIp', 'creatorId']));
-          } catch(e) {
+          } catch (e) {
             console.error('sendError', e, data);
             done(e);
           }
-        }
+        },
       };
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.equal(null, error);
         } catch (e) {
@@ -423,53 +408,51 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
 
-    it("writableCols, creatorId, clientIp, validate success, reload error", function(done) {
-
+    it('writableCols, creatorId, clientIp, validate success, reload error', (done) => {
       Model.writableCols = ['name', 'age', 'address'];
       Model.rawAttributes.creatorId = {};
       Model.rawAttributes.clientIp = {};
 
-      var add = helper.batchAdd(Model);
+      const add = helper.batchAdd(Model);
 
-      var req = {
+      const req = {
         user: {
-          id: 3
+          id: 3,
         },
         headers: {
-          'x-forwarded-for':  '192.168.199.188'
+          'x-forwarded-for': '192.168.199.188',
         },
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
                 reject(Error('Happen a error when reload'));
               }, 10);
             });
           },
-          validate: validateSuccess(model)
         });
+        model.validate = validateSuccess(model);
 
         return model;
       };
 
-      var res = {};
+      const res = {};
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.ok(error);
           assert.ok(error instanceof Error);
@@ -479,61 +462,59 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
 
-    it("writableCols, creatorId, clientIp, validate success, save error", function(done) {
-
+    it('writableCols, creatorId, clientIp, validate success, save error', (done) => {
       Model.writableCols = ['name', 'age', 'address'];
       Model.rawAttributes.creatorId = {};
       Model.rawAttributes.clientIp = {};
 
-      var add = helper.batchAdd(Model);
+      const add = helper.batchAdd(Model);
 
-      var req = {
+      const req = {
         user: {
-          id: 3
+          id: 3,
         },
         headers: {
-          'x-forwarded-for':  '192.168.199.188'
+          'x-forwarded-for': '192.168.199.188',
         },
         hooks: {
-          address: '北京市昌平区'
+          address: '北京市昌平区',
         },
         params: {},
         body: {
           id: 99,
           name: 'Redstone Zhao',
-          age: 36
-        }
+          age: 36,
+        },
       };
 
-      Model.build = function(attrs) {
-        var model = _.extend({}, attrs, {
-          reload: function() {
-            return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+      Model.build = (attrs) => {
+        const model = _.extend({}, attrs, {
+          reload() {
+            return new Promise((resolve) => {
+              setTimeout(() => {
                 resolve(model);
               }, 10);
             });
           },
-          validate: validateSuccess(model)
         });
+        model.validate = validateSuccess(model);
 
         return model;
       };
 
-      Model.create = function(x) {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+      Model.create = () => (
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
             reject(Error('Happen a error when save'));
           }, 10);
-        });
-      };
+        })
+      );
 
-      var res = {};
+      const res = {};
 
-      add(req, res, function(error) {
+      add(req, res, (error) => {
         try {
           assert.ok(error);
           assert.ok(error instanceof Error);
@@ -543,8 +524,6 @@ describe("open-rest-helper-rest-batchAdd", function() {
         }
         done();
       });
-
     });
   });
-
 });
