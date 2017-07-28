@@ -15,8 +15,10 @@ npm instsall open-rest-helper-rest --save
 ```
 
 ```js
-var rest = require('open-rest');
-var restHelper = require('open-rest-helper-rest')(rest);
+const rest = require('open-rest');
+const restHelper = require('open-rest-helper-rest');
+
+rest.plugin(restHelper);
 
 // restHelper Equivalent to rest.helper.rest
 ```
