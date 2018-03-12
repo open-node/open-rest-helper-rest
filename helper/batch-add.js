@@ -4,7 +4,7 @@ const async = require('async');
 const _ = require('lodash');
 
 module.exports = (rest) => {
-  const Sequelize = rest.Sequelize;
+  const { Sequelize } = rest;
 
   /** 输出 */
   const detail = (hook, attachs) => (
@@ -19,7 +19,7 @@ module.exports = (rest) => {
         }
         return json;
       });
-      if (!_.isArray(req.body) && ret.length === 1) ret = ret[0];
+      if (!_.isArray(req.body) && ret.length === 1) [ret] = ret;
       if (_.isArray(ret)) {
         res.send(204);
       } else {
@@ -56,10 +56,10 @@ module.exports = (rest) => {
   );
 
   /** 保存 */
-  const save = (hook, Model) => (
+  const save = (hook, Model, opt) => (
     (req, res, next) => {
-      const ls = _.map(req.hooks[hook], (x) => ((x.toJSON instanceof Function) ? x.toJSON() : x));
-      const p = _.isArray(req.body) ? Model.bulkCreate(ls) : Model.create(ls[0]);
+      const ls = _.map(req.hooks[hook], x => ((x.toJSON instanceof Function) ? x.toJSON() : x));
+      const p = _.isArray(req.body) ? Model.bulkCreate(ls, opt) : Model.create(ls[0], opt);
       rest.utils.callback(p, (error, results) => {
         const err1 = rest.errors.sequelizeIfError(error);
         if (err1) return next(err1);
@@ -80,10 +80,10 @@ module.exports = (rest) => {
   );
 
   /** 批量添加 */
-  const batchAdd = (Model, cols, hook, attachs) => {
+  const batchAdd = (Model, cols, hook, attachs, createOpt) => {
     const _hook = hook || `${Model.name}s`;
     const _validate = validate(Model, cols, _hook);
-    const _save = save(_hook, Model);
+    const _save = save(_hook, Model, createOpt);
     const _detail = detail(_hook, attachs);
     return (req, res, next) => {
       _validate(req, res, (error1) => {
@@ -139,6 +139,22 @@ module.exports = (rest) => {
       },
     },
     message: 'Attach other data dict. key => value, value is req\'s path',
+  }, {
+    /**
+     * [options]  Object
+     * [options.raw=false]  Boolean
+     * [options.isNewRecord=true] Boolean
+     * [options.fields] Array
+     * [options.include]  Array
+     * [options.onDuplicate]  String
+     * [options.transaction]  Transaction
+     * [options.logging=false]  Function
+     * [options.benchmark=false]  Boolean
+     */
+    name: 'createOpt',
+    type: Object,
+    allowNull: true,
+    message: 'Sequelize create & bulkCreate the second argument',
   }];
 
   return delegate(batchAdd, schemas);

@@ -5,7 +5,7 @@ const _ = require('lodash');
 const helper = require('../')(rest);
 
 om(rest);
-const Sequelize = rest.Sequelize;
+const { Sequelize } = rest;
 const sequelize = new Sequelize();
 const Model = sequelize.define('book', {
   id: {
@@ -17,7 +17,7 @@ const Model = sequelize.define('book', {
   age: Sequelize.INTEGER.UNSIGNED,
 });
 
-const validateSuccess = (model) => (
+const validateSuccess = model => (
   () => (
     new Promise((resolve) => {
       setTimeout(() => {
@@ -37,7 +37,6 @@ const validateFailure = () => (
   )
 );
 
-
 describe('open-rest-helper-rest-batchAdd', () => {
   describe('Argument validate error', () => {
     it('Model argument unset', (done) => {
@@ -53,7 +52,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
     it('Model argument type error', (done) => {
       assert.throws(() => {
         helper.batchAdd({});
-      }, (err) => (
+      }, err => (
         err instanceof Error && err.message === 'Model must be a class of Sequelize defined'
       ));
       done();
@@ -62,21 +61,21 @@ describe('open-rest-helper-rest-batchAdd', () => {
     it('cols type error', (done) => {
       assert.throws(() => {
         helper.batchAdd(Model, 'string');
-      }, (err) => err instanceof Error && err.message === "Allow writed attrs's name array");
+      }, err => err instanceof Error && err.message === "Allow writed attrs's name array");
       done();
     });
 
     it('cols item type error', (done) => {
       assert.throws(() => {
         helper.batchAdd(Model, [null]);
-      }, (err) => err instanceof Error && err.message === 'Every item in cols must be a string.');
+      }, err => err instanceof Error && err.message === 'Every item in cols must be a string.');
       done();
     });
 
     it('cols item non-exists error', (done) => {
       assert.throws(() => {
         helper.batchAdd(Model, ['id', 'price']);
-      }, (err) => err instanceof Error && err.message === 'Attr non-exists: price');
+      }, err => err instanceof Error && err.message === 'Attr non-exists: price');
       done();
     });
 
@@ -156,7 +155,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
         return model;
       };
 
-      Model.bulkCreate = (ls) => (
+      Model.bulkCreate = ls => (
         new Promise((resolve) => {
           setTimeout(() => {
             resolve(_.map(ls, (x, i) => {
@@ -226,7 +225,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
       };
 
 
-      Model.create = (x) => (
+      Model.create = x => (
         new Promise((resolve) => {
           setTimeout(() => {
             x.id = 1;
@@ -239,7 +238,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
         try {
           assert.equal(null, error);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, '1');
         }
         done();
       });
@@ -280,7 +279,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
         try {
           assert.equal(null, error);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, '2');
         }
         done();
       });
@@ -334,7 +333,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
           assert.ok(error instanceof Error);
           assert.equal('This is a test error message', error.message);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, error.message, '3');
         }
         done();
       });
@@ -375,7 +374,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
             });
           },
         });
-        model.validate = validateFailure(model);
+        model.validate = validateSuccess(model);
 
         model.toJSON = () => model;
 
@@ -404,7 +403,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
         try {
           assert.equal(null, error);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, '4');
         }
         done();
       });
@@ -458,7 +457,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
           assert.ok(error instanceof Error);
           assert.equal('Happen a error when reload', error.message);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, '5');
         }
         done();
       });
@@ -520,7 +519,7 @@ describe('open-rest-helper-rest-batchAdd', () => {
           assert.ok(error instanceof Error);
           assert.equal('Happen a error when save', error.message);
         } catch (e) {
-          console.error('nextError', e, error);
+          console.error('nextError', e, error, '6');
         }
         done();
       });
