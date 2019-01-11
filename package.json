@@ -1,6 +1,6 @@
 {
   "name": "open-rest-helper-rest",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "description": "open-rest 的 helper 插件，用来实现 CRUD 的标准操作",
   "main": "index.js",
   "scripts": {

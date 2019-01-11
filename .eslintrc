@@ -20,6 +20,12 @@
   "rules": {
     "import/no-extraneous-dependencies": "off",
     "react/require-extension": "off",
+    "quotes": "off",
+    "arrow-parens": "off",
+    "operator-linebreak": "off",
+    "comma-dangle": "off",
+    "implicit-arrow-linebreak": "off",
+    "no-restricted-syntax": "off",
     "indent": ["error", 2],
     "no-param-reassign": ["error", {"props": false}],
     "no-console": 0,
