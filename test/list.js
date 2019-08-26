@@ -63,6 +63,80 @@ describe('open-rest-helper-rest-list', () => {
       done();
     });
 
+    it('fixOptFn is function', (done) => {
+      const ls = [{
+        id: 1,
+        name: 'Redstone',
+        score: 30
+      }, {
+        id: 2,
+        name: 'StonePHP',
+        score: 60
+      }];
+      
+      const fixOptFn = (options, params) => {
+        const { condition } = params;
+        options.attributes = {};
+        options.attributes.include = [[Model.sequelize.literal(`(${condition} * 30)`), `score`]];
+      };
+      
+      const list = helper
+                    .list
+                    .Model(Model)
+                    .fixOptFn(fixOptFn)
+                    .exec();
+      const req = {
+        params: {
+          condition: 'name',
+        },
+      };
+      const res = {
+        send(lss) {
+          assert.deepEqual([{
+            id: 1,
+            name: 'Redstone',
+            score: 30,
+          }, {
+            id: 2,
+            name: 'StonePHP',
+            score: 60,
+          }], lss);
+        },
+        header(key, value) {
+          assert.equal('X-Content-Record-Total', key);
+          assert.equal(2, value);
+        },
+      };
+
+      Model.findAll = (options) => (
+        new Promise((resolve) => {
+          assert.deepEqual(
+            { include: [[{ val: "(name * 30)" }, "score"]] }, options.attributes);
+          setTimeout(() => {
+            resolve(ls);
+          }, 100);
+        })
+      );
+      Model.count = () => (
+        new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(2);
+          }, 100);
+        })
+      );
+      list(req, res, (error) => {
+        assert.equal(null, error);
+        done();
+      });
+    });
+
+    it('fixOptFn type error', (done) => {
+      assert.throws(() => {
+        helper.list(Model, null, null, null, 'abc');
+      }, (err) => err instanceof Error && err.message === "FixOptFn must be a function");
+      done();
+    });
+
     it('All arguments validate pass', (done) => {
       const list = helper.list(Model);
       const req = {
