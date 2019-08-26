@@ -14,14 +14,17 @@ const getTotal = (Model, opt, ignoreTotal, callback) => {
  * _options 是否要去req.hooks上去options
  * allowAttrs 那些字段是被允许的
  * hook 默认为空，如果指定了hook，则数据不直接输出而是先挂在 hook上
+ * fixOptFn 可选函数，用来完善查询数据库的条件。可根据req.param上的数据，对option做加减。
  */
-const list = (Model, opt, allowAttrs, hook) => (
+const list = (Model, opt, allowAttrs, hook, fixOptFn) => (
   (req, res, next) => {
     const params = req.params;
     const options = opt ? req.hooks[opt] : U.findAllOpts(Model, req.params);
     const countOpt = {};
     if (options.where) countOpt.where = options.where;
     if (options.include) countOpt.include = options.include;
+    // 完善opt
+    if (fixOptFn && _.isFunction(fixOptFn)) fixOptFn(options, params);
     // 是否忽略总条目数，这样就可以不需要count了。在某些时候可以
     // 提高查询速度
     const ignoreTotal = req.params._ignoreTotal === 'yes';
@@ -89,6 +92,11 @@ module.exports = (rest) => {
     type: String,
     allowNull: true,
     message: 'Geted list will hook on req.hooks[hook], so `hook` must be a string',
+  }, {
+    name: 'fixOptFn',
+    type: Function,
+    allowNull: true,
+    message: 'FixOptFn must be a function',
   }];
 
   return delegate(list, schemas);
